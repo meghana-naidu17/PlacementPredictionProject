@@ -23,6 +23,10 @@
                     Data Loading
                 </a>
             </li>
+            <a href="{{ url_for('eda_page') }}"
+                   class="menu-item {% if active == 'eda_page' %}active{% endif %}">
+                    EDA
+                </a>
 
             <li class="menu-item disabled">Preprocessing (Coming Soon)</li>
             <li class="menu-item disabled">Model Training (Coming Soon)</li>

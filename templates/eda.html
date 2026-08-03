@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Prediction Project - EDA</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="topbar">
+    <h1>Placement Prediction Project</h1>
+</header>
+
+<div class="layout">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <ul>
+            <li>
+                <a href="{{ url_for('data_loading') }}"
+                   class="menu-item {% if active == 'data-loading' %}active{% endif %}">
+                    Data Loading
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ url_for('eda_page') }}"
+                   class="menu-item {% if active == 'eda' %}active{% endif %}">
+                    EDA
+                </a>
+            </li>
+
+            <li class="menu-item disabled">
+                Preprocessing (Coming Soon)
+            </li>
+
+            <li class="menu-item disabled">
+                Model Training (Coming Soon)
+            </li>
+
+            <li class="menu-item disabled">
+                Prediction (Coming Soon)
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+
+        <h2>Exploratory Data Analysis (EDA)</h2>
+
+        {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if results %}
+
+        <!-- Dataset Summary -->
+        <h3>Dataset Summary</h3>
+
+        <table class="summary-table">
+            <tr>
+                <td><b>Rows</b></td>
+                <td>{{ results.rows }}</td>
+            </tr>
+
+            <tr>
+                <td><b>Columns</b></td>
+                <td>{{ results.columns }}</td>
+            </tr>
+
+            <tr>
+                <td><b>Duplicate Rows</b></td>
+                <td>{{ results.duplicates }}</td>
+            </tr>
+        </table>
+
+        <!-- Missing Values -->
+        <h3>Missing Values</h3>
+
+        {% if results.missing %}
+
+        <div class="table-wrapper">
+
+            <table class="data-table">
+
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Missing Count</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for column, count in results.missing.items() %}
+
+                    <tr>
+                        <td>{{ column }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <p>No missing values found.</p>
+
+        {% endif %}
+
+        <!-- Placement Status -->
+        <h3>Placement Status</h3>
+
+        <table class="summary-table">
+
+            <tr>
+                <th>Status</th>
+                <th>Count</th>
+            </tr>
+
+            {% for status, count in results.target_counts.items() %}
+
+            <tr>
+                <td>{{ status }}</td>
+                <td>{{ count }}</td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+        <!-- Charts -->
+        <h3>EDA Charts</h3>
+
+        <div class="chart-grid">
+
+            {% for chart in results.charts %}
+
+            <div class="chart-card">
+
+                <h4>{{ chart.replace(".png","").replace("_"," ").title() }}</h4>
+
+                <img src="{{ url_for('static', filename=chart) }}"
+                     alt="{{ chart }}">
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+    </main>
+
+</div>
+
+</body>
+</html>
