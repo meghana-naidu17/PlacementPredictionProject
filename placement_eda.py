@@ -443,44 +443,44 @@ def run_eda():
     # 15. PAIRPLOT
     # ============================================================
 
-    # pair_cols = [
-    #
-    #     "CGPA",
-    #     "AptitudeTestScore",
-    #     "CodingTestScore",
-    #     "MockInterviewScore",
-    #     "PlacementStatus"
-    #
-    # ]
-    #
-    # pair_cols = [
-    #
-    #     col for col in pair_cols
-    #
-    #     if col in data.columns
-    #
-    # ]
-    #
-    # if len(pair_cols) >= 2:
-    #
-    #     g = sns.pairplot(
-    #         data=data[pair_cols],
-    #         hue="PlacementStatus",
-    #         diag_kind="hist",
-    #         corner=True,
-    #         palette="Set1"
-    #     )
-    #
-    #     g.figure.suptitle(
-    #         "Pairwise Relationships",
-    #         y=1.02
-    #     )
-    #
-    #     g.savefig(os.path.join(CHART_DIR, "pairplot.png"))
-    #
-    #     plt.close()
-    #
-    #     charts.append("pairplot.png")
+    pair_cols = [
+
+        "CGPA",
+        "AptitudeTestScore",
+        "CodingTestScore",
+        "MockInterviewScore",
+        "PlacementStatus"
+
+    ]
+
+    pair_cols = [
+
+        col for col in pair_cols
+
+        if col in data.columns
+
+    ]
+
+    if len(pair_cols) >= 2:
+
+        g = sns.pairplot(
+            data=data[pair_cols],
+            hue="PlacementStatus",
+            diag_kind="hist",
+            corner=True,
+            palette="Set1"
+        )
+
+        g.figure.suptitle(
+            "Pairwise Relationships",
+            y=1.02
+        )
+
+        g.savefig(os.path.join(CHART_DIR, "pairplot.png"))
+
+        plt.close()
+
+        charts.append("pairplot.png")
 
     # ============================================================
     # RETURN RESULTS
