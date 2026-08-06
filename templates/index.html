@@ -2,167 +2,192 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Placement Prediction Project</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Prediction Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
 <header class="topbar">
-    <h1>Placement Prediction Project</h1>
+    <h1> Placement Prediction Dashboard</h1>
 </header>
 
-<div class="layout">
+<div class="container">
 
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <ul>
-            <li>
-                <a href="{{ url_for('data_loading') }}"
-                   class="menu-item {% if active == 'data-loading' %}active{% endif %}">
-                    Data Loading
-                </a>
-            </li>
-            <a href="{{ url_for('eda_page') }}"
-                   class="menu-item {% if active == 'eda_page' %}active{% endif %}">
-                    EDA
-                </a>
+    <aside class="sidebar">
 
-            <li class="menu-item disabled">Preprocessing (Coming Soon)</li>
-            <li class="menu-item disabled">Model Training (Coming Soon)</li>
-            <li class="menu-item disabled">Prediction (Coming Soon)</li>
-        </ul>
-    </nav>
+        <h3>Modules</h3>
 
-    <!-- Main Content -->
+        <a href="{{ url_for('data_loading') }}"
+           class="{% if active=='data-loading' %}active{% endif %}">
+             Dataset Summary
+        </a>
+
+       <a href="{{ url_for('eda_page') }}"
+   class="{% if active=='eda' %}active{% endif %}">
+     Exploratory Data Analysis
+</a>
+
+        <a class="disabled">
+             Data Preprocessing
+        </a>
+
+        <a class="disabled">
+             Machine Learning
+        </a>
+
+        <a class="disabled">
+             Prediction
+        </a>
+
+    </aside>
+
     <main class="content">
 
-        {% if active == 'none' %}
+        {% if active=="none" %}
+
+        <div class="card">
             <h2>Welcome</h2>
             <p>Select a module from the left panel.</p>
+        </div>
+
         {% endif %}
 
-        {% if active == 'data-loading' %}
-
-        <h2>Dataset Summary</h2>
+        {% if active=="data-loading" %}
 
         {% if error %}
+
+        <div class="card">
             <div class="error">{{ error }}</div>
+        </div>
+
         {% endif %}
 
         {% if summary %}
 
-        <!-- Summary -->
-        <table class="summary-table">
+        <div class="card">
 
-            <tr>
-                <td><b>Total Rows</b></td>
-                <td>{{ summary.n_rows }}</td>
-            </tr>
+            <h2>Dataset Summary</h2>
 
-            <tr>
-                <td><b>Total Columns</b></td>
-                <td>{{ summary.n_columns }}</td>
-            </tr>
-
-            <tr>
-                <td><b>Total Cells</b></td>
-                <td>{{ summary.total_cells }}</td>
-            </tr>
-
-            <tr>
-                <td><b>Duplicate Rows</b></td>
-                <td>{{ summary.duplicate_rows }}</td>
-            </tr>
-
-            <tr>
-                <td><b>Memory Usage</b></td>
-                <td>{{ summary.memory_usage }} KB</td>
-            </tr>
-
-        </table>
-
-        <br>
-
-        <!-- Column Information -->
-
-        <h2>Column Information</h2>
-
-        <div class="table-wrapper">
-
-            <table class="data-table">
-
-                <thead>
+            <table class="summary-table">
 
                 <tr>
-                    <th>Column</th>
-                    <th>Data Type</th>
-                    <th>Missing Values</th>
-                    <th>Missing %</th>
-                    <th>Unique Values</th>
+                    <td>Total Rows</td>
+                    <td>{{ summary.n_rows }}</td>
                 </tr>
-
-                </thead>
-
-                <tbody>
-
-                {% for col in summary.columns %}
 
                 <tr>
-                    <td>{{ col }}</td>
-                    <td>{{ summary.dtypes[col] }}</td>
-                    <td>{{ summary.missing_counts[col] }}</td>
-                    <td>{{ summary.missing_percentages[col] }}%</td>
-                    <td>{{ summary.unique_values[col] }}</td>
+                    <td>Total Columns</td>
+                    <td>{{ summary.n_columns }}</td>
                 </tr>
 
-                {% endfor %}
+                <tr>
+                    <td>Total Cells</td>
+                    <td>{{ summary.total_cells }}</td>
+                </tr>
 
-                </tbody>
+                <tr>
+                    <td>Duplicate Rows</td>
+                    <td>{{ summary.duplicate_rows }}</td>
+                </tr>
+
+                <tr>
+                    <td>Memory Usage</td>
+                    <td>{{ summary.memory_usage }} KB</td>
+                </tr>
 
             </table>
 
         </div>
 
-        <br>
+        <div class="card">
 
-        <!-- Dataset Preview -->
+            <h2>Column Information</h2>
 
-        <h2>Dataset Preview (First 10 Rows)</h2>
+            <div class="table-wrapper">
 
-        <div class="table-wrapper">
+                <table class="data-table">
 
-            <table class="data-table">
+                    <thead>
 
-                <thead>
+                    <tr>
 
-                <tr>
+                        <th>Column</th>
+                        <th>Data Type</th>
+                        <th>Missing</th>
+                        <th>Missing %</th>
+                        <th>Unique</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
 
                     {% for col in summary.columns %}
+
+                    <tr>
+
+                        <td>{{ col }}</td>
+                        <td>{{ summary.dtypes[col] }}</td>
+                        <td>{{ summary.missing_counts[col] }}</td>
+                        <td>{{ summary.missing_percentages[col] }}%</td>
+                        <td>{{ summary.unique_values[col] }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Dataset Preview</h2>
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in summary.columns %}
                         <th>{{ col }}</th>
-                    {% endfor %}
+                        {% endfor %}
 
-                </tr>
+                    </tr>
 
-                </thead>
+                    </thead>
 
-                <tbody>
+                    <tbody>
 
-                {% for row in summary.preview %}
+                    {% for row in summary.preview %}
 
-                <tr>
+                    <tr>
 
-                    {% for col in summary.columns %}
+                        {% for col in summary.columns %}
                         <td>{{ row[col] }}</td>
+                        {% endfor %}
+
+                    </tr>
+
                     {% endfor %}
 
-                </tr>
+                    </tbody>
 
-                {% endfor %}
+                </table>
 
-                </tbody>
-
-            </table>
+            </div>
 
         </div>
 

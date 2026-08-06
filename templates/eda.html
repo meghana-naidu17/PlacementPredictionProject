@@ -1,163 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placement Prediction Project - EDA</title>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>EDA Dashboard</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
+
 </head>
 
 <body>
 
 <header class="topbar">
-    <h1>Placement Prediction Project</h1>
+    <h1>🎓 Placement Prediction Dashboard</h1>
 </header>
 
-<div class="layout">
+<div class="container">
 
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <ul>
-            <li>
-                <a href="{{ url_for('data_loading') }}"
-                   class="menu-item {% if active == 'data-loading' %}active{% endif %}">
-                    Data Loading
-                </a>
-            </li>
+    <aside class="sidebar">
 
-            <li>
-                <a href="{{ url_for('eda_page') }}"
-                   class="menu-item {% if active == 'eda' %}active{% endif %}">
-                    EDA
-                </a>
-            </li>
+        <h3>Modules</h3>
 
-            <li class="menu-item disabled">
-                Preprocessing (Coming Soon)
-            </li>
+        <a href="{{ url_for('data_loading') }}">
+             Dataset Summary
+        </a>
 
-            <li class="menu-item disabled">
-                Model Training (Coming Soon)
-            </li>
+        <a href="{{ url_for('eda_page') }}"
+           class="active">
+             Exploratory Data Analysis
+        </a>
 
-            <li class="menu-item disabled">
-                Prediction (Coming Soon)
-            </li>
-        </ul>
-    </nav>
+        <a class="disabled">
+            Data Preprocessing
+        </a>
 
-    <!-- Main Content -->
+        <a class="disabled">
+             Machine Learning
+        </a>
+
+        <a class="disabled">
+             Prediction
+        </a>
+
+    </aside>
+
     <main class="content">
 
-        <h2>Exploratory Data Analysis (EDA)</h2>
-
         {% if error %}
-        <div class="error">
-            {{ error }}
+
+        <div class="card">
+
+            <div class="error">
+
+                {{ error }}
+
+            </div>
+
         </div>
+
         {% endif %}
 
         {% if results %}
 
-        <!-- Dataset Summary -->
-        <h3>Dataset Summary</h3>
+        <div class="card">
 
-        <table class="summary-table">
-            <tr>
-                <td><b>Rows</b></td>
-                <td>{{ results.rows }}</td>
-            </tr>
+            <h2>Dataset Summary</h2>
 
-            <tr>
-                <td><b>Columns</b></td>
-                <td>{{ results.columns }}</td>
-            </tr>
+            <table class="summary-table">
 
-            <tr>
-                <td><b>Duplicate Rows</b></td>
-                <td>{{ results.duplicates }}</td>
-            </tr>
-        </table>
+                <tr>
+                    <td>Total Rows</td>
+                    <td>{{ results.rows }}</td>
+                </tr>
 
-        <!-- Missing Values -->
-        <h3>Missing Values</h3>
+                <tr>
+                    <td>Total Columns</td>
+                    <td>{{ results.columns }}</td>
+                </tr>
 
-        {% if results.missing %}
-
-        <div class="table-wrapper">
-
-            <table class="data-table">
-
-                <thead>
-                    <tr>
-                        <th>Column</th>
-                        <th>Missing Count</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                {% for column, count in results.missing.items() %}
-
-                    <tr>
-                        <td>{{ column }}</td>
-                        <td>{{ count }}</td>
-                    </tr>
-
-                {% endfor %}
-
-                </tbody>
+                <tr>
+                    <td>Duplicate Rows</td>
+                    <td>{{ results.duplicates }}</td>
+                </tr>
 
             </table>
 
         </div>
 
-        {% else %}
+        <div class="card">
 
-        <p>No missing values found.</p>
+            <h2>Missing Values</h2>
 
-        {% endif %}
+            <div class="table-wrapper">
 
-        <!-- Placement Status -->
-        <h3>Placement Status</h3>
+                <table class="data-table">
 
-        <table class="summary-table">
+                    <thead>
 
-            <tr>
-                <th>Status</th>
-                <th>Count</th>
-            </tr>
+                    <tr>
 
-            {% for status, count in results.target_counts.items() %}
+                        <th>Column</th>
+                        <th>Missing Count</th>
 
-            <tr>
-                <td>{{ status }}</td>
-                <td>{{ count }}</td>
-            </tr>
+                    </tr>
 
-            {% endfor %}
+                    </thead>
 
-        </table>
+                    <tbody>
 
-        <!-- Charts -->
-        <h3>EDA Charts</h3>
+                    {% for col,count in results.missing.items() %}
 
-        <div class="chart-grid">
+                    <tr>
 
-            {% for chart in results.charts %}
+                        <td>{{ col }}</td>
 
-            <div class="chart-card">
+                        <td>{{ count }}</td>
 
-                <h4>{{ chart.replace(".png","").replace("_"," ").title() }}</h4>
+                    </tr>
 
-                <img src="{{ url_for('static', filename=chart) }}"
-                     alt="{{ chart }}">
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
 
             </div>
 
-            {% endfor %}
+        </div>
+
+        <div class="card">
+
+            <h2>Placement Status</h2>
+
+            <table class="summary-table">
+
+                <tr>
+
+                    <th>Status</th>
+
+                    <th>Count</th>
+
+                </tr>
+
+                {% for status,count in results.target_counts.items() %}
+
+                <tr>
+
+                    <td>{{ status }}</td>
+
+                    <td>{{ count }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </table>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Generated Charts</h2>
+
+            <div class="chart-grid">
+
+                {% for chart in results.charts %}
+
+                <div class="chart-card">
+
+                    <h3>
+
+                        {{ chart.replace(".png","").replace("_"," ").title() }}
+
+                    </h3>
+
+                    <img src="{{ url_for('static', filename='charts/' + chart) }}">
+
+                </div>
+
+                {% endfor %}
+
+            </div>
 
         </div>
 
