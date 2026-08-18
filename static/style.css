@@ -1,118 +1,944 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Segoe UI,sans-serif;
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
 }
 
-body{
-    background:#eef2f7;
+
+body {
+    background: #eef2f7;
+    color: #333;
 }
 
-.topbar{
-    background:#1f3a5f;
-    color:white;
-    padding:18px;
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.topbar {
+    background: #1f3a5f;
+    color: white;
+    padding: 18px 25px;
 }
 
-.topbar h1{
-    margin:0;
+
+.topbar h1 {
+    margin: 0;
+    font-size: 24px;
 }
 
-.container{
-    display:flex;
-    min-height:calc(100vh - 70px);
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.container {
+    display: flex;
+
+    min-height:
+        calc(100vh - 70px);
 }
 
-.sidebar{
-    width:250px;
-    background:#26466f;
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+    width: 250px;
+
+    flex-shrink: 0;
+
+    background: #26466f;
+
+    min-height:
+        calc(100vh - 70px);
 }
 
-.sidebar h3{
-    color:white;
-    text-align:center;
-    padding:20px;
+
+.sidebar h3 {
+    color: white;
+
+    text-align: center;
+
+    padding: 20px;
+
+    font-size: 18px;
 }
 
-.sidebar a{
-    display:block;
-    color:white;
-    padding:15px 20px;
-    text-decoration:none;
-    transition:.3s;
+
+.sidebar a {
+    display: block;
+
+    color: white;
+
+    padding: 15px 20px;
+
+    text-decoration: none;
+
+    transition: 0.2s;
 }
 
-.sidebar a:hover{
-    background:#3c5f91;
+
+.sidebar a:hover {
+    background: #3c5f91;
 }
 
-.sidebar a.active{
-    background:#1f3a5f;
-    font-weight:bold;
+
+.sidebar a.active {
+    background: #1f3a5f;
+
+    font-weight: bold;
+
+    border-left:
+        4px solid white;
 }
 
-.sidebar a.disabled{
-    color:#aab8cf;
-    cursor:not-allowed;
+
+.sidebar a.disabled {
+    color: #aab8cf;
+
+    cursor: not-allowed;
 }
 
-.content{
-    flex:1;
-    padding:30px;
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+
+.content {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 30px;
+
+    overflow-x: hidden;
 }
 
-.card{
-    background:white;
-    padding:20px;
-    border-radius:8px;
-    box-shadow:0 2px 8px rgba(0,0,0,.1);
-    margin-bottom:20px;
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.card {
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.10);
+
+    margin-bottom: 25px;
+
+    width: 100%;
 }
 
-.summary-table,
-.data-table{
-    width:100%;
-    border-collapse:collapse;
+
+.card h2 {
+    color: #1f3a5f;
+
+    margin-bottom: 15px;
+
+    font-size: 22px;
 }
+
+
+.card p {
+    margin-bottom: 10px;
+}
+
+
+/* =========================================================
+   PREPROCESSING HEADER
+========================================================= */
+
+.preprocessing-header h2 {
+    color: #1f3a5f;
+
+    margin-bottom: 8px;
+}
+
+
+.preprocessing-header p {
+    color: #666;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   DATASET INFORMATION
+========================================================= */
+
+.info-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 15px;
+
+    margin-top: 20px;
+}
+
+
+.info-box {
+    background: #eef2f7;
+
+    border-left:
+        4px solid #1f3a5f;
+
+    padding: 20px;
+
+    border-radius: 8px;
+
+    text-align: center;
+}
+
+
+.info-box h3 {
+    color: #1f3a5f;
+
+    font-size: 26px;
+
+    margin-bottom: 8px;
+}
+
+
+.info-box p {
+    color: #666;
+
+    font-size: 14px;
+
+    margin: 0;
+}
+
+
+/* =========================================================
+   SUMMARY TABLE
+========================================================= */
+
+.summary-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
 
 .summary-table td,
-.summary-table th,
-.data-table td,
-.data-table th{
-    border:1px solid #ddd;
-    padding:10px;
+.summary-table th {
+    border:
+        1px solid #ddd;
+
+    padding: 11px;
 }
 
-.summary-table th,
-.data-table th{
-    background:#e9eef6;
+
+.summary-table td:first-child {
+    font-weight: 600;
+
+    color: #1f3a5f;
+
+    width: 40%;
 }
 
-.table-wrapper{
-    overflow:auto;
-    max-height:450px;
+
+.summary-table th {
+    background: #e9eef6;
 }
 
-.chart-grid{
-    display:flex;
-    flex-wrap:wrap;
-    gap:20px;
+
+/* =========================================================
+   DATA TABLE
+========================================================= */
+
+.data-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 13px;
 }
 
-.chart-card{
-    width:420px;
-    background:white;
-    border-radius:8px;
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
-    padding:15px;
+
+.data-table th,
+.data-table td {
+    border:
+        1px solid #ddd;
+
+    padding: 10px;
+
+    text-align: left;
 }
 
-.chart-card img{
-    width:100%;
+
+.data-table th {
+    background: #26466f;
+
+    color: white;
+
+    white-space: nowrap;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 1;
 }
 
-.error{
-    color:red;
-    font-weight:bold;
+
+.data-table td {
+    white-space: nowrap;
+}
+
+
+.data-table tbody tr:nth-child(even) {
+    background: #f7f9fc;
+}
+
+
+.data-table tbody tr:hover {
+    background: #eef2f7;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    overflow-y: auto;
+
+    max-height: 450px;
+
+    border-radius: 6px;
+}
+
+
+/* =========================================================
+   MISSING VALUE CARD
+========================================================= */
+
+.missing-value-card {
+    background: white;
+
+    border-left:
+        5px solid #26466f;
+}
+
+
+.section-description {
+    color: #555;
+
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   METHOD OPTIONS
+========================================================= */
+
+.missing-method-options {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 15px;
+
+    margin: 20px 0;
+}
+
+
+.method-option {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-height: 70px;
+
+    padding: 15px;
+
+    background: #f7f9fc;
+
+    border:
+        2px solid #d8e0eb;
+
+    border-radius: 8px;
+
+    color: #1f3a5f;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.method-option:hover {
+    background: #eef2f7;
+
+    border-color: #26466f;
+}
+
+
+.method-option:has(
+    input[type="radio"]:checked
+) {
+    background: #eef2f7;
+
+    border-color: #1f3a5f;
+
+    box-shadow:
+        0 0 0 1px #1f3a5f;
+}
+
+
+.method-option input[type="radio"] {
+    width: 17px;
+
+    height: 17px;
+
+    margin-right: 10px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   APPLY BUTTON
+========================================================= */
+
+.apply-button {
+    display: inline-block;
+
+    background: #1f3a5f;
+
+    color: white;
+
+    border: none;
+
+    padding: 12px 28px;
+
+    border-radius: 6px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.apply-button:hover {
+    background: #26466f;
+}
+
+
+/* =========================================================
+   SELECTED METHOD
+========================================================= */
+
+.selected-method {
+    margin-top: 22px;
+
+    padding: 16px 20px;
+
+    background: #eef2f7;
+
+    border-left:
+        4px solid #1f3a5f;
+
+    border-radius: 5px;
+
+    color: #333;
+
+    font-size: 15px;
+}
+
+
+.selected-method strong {
+    color: #1f3a5f;
+
+    margin-left: 5px;
+}
+
+
+/* =========================================================
+   MISSING VALUE SUMMARY
+========================================================= */
+
+.missing-summary {
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(130px, 1fr));
+
+    gap: 15px;
+
+    margin-top: 22px;
+
+    width: 100%;
+}
+
+
+/* =========================================================
+   MISSING VALUE BOX
+========================================================= */
+
+.missing-box {
+    background: #eef2f7;
+
+    padding: 18px 10px;
+
+    border-radius: 8px;
+
+    text-align: center;
+
+    min-width: 0;
+}
+
+
+.missing-box h3 {
+    color: #1f3a5f;
+
+    font-size: 25px;
+
+    margin-bottom: 7px;
+
+    overflow-wrap: anywhere;
+}
+
+
+.missing-box p {
+    color: #666;
+
+    margin: 0;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   SUB HEADING
+========================================================= */
+
+.sub-heading {
+    color: #1f3a5f;
+
+    margin-top: 30px;
+
+    margin-bottom: 15px;
+
+    font-size: 20px;
+}
+
+
+/* =========================================================
+   CHANGES MADE
+========================================================= */
+
+.changes-made {
+    margin-top: 30px;
+
+    padding-top: 5px;
+
+    border-top:
+        1px solid #e1e6ed;
+}
+
+
+.change-section {
+    background: #f7f9fc;
+
+    border:
+        1px solid #dce4ee;
+
+    border-left:
+        4px solid #26466f;
+
+    border-radius: 7px;
+
+    padding: 18px;
+
+    margin-bottom: 18px;
+}
+
+
+.change-section h4 {
+    color: #1f3a5f;
+
+    font-size: 17px;
+
+    margin-bottom: 8px;
+}
+
+
+.change-section p {
+    color: #555;
+
+    margin-bottom: 15px;
+}
+
+
+/* =========================================================
+   DELETED ITEMS
+========================================================= */
+
+.deleted-list {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    max-height: 220px;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    padding: 8px;
+
+    background: white;
+
+    border:
+        1px solid #e1e6ed;
+
+    border-radius: 6px;
+}
+
+
+.deleted-item {
+    display: inline-block;
+
+    background: #e9eef6;
+
+    color: #1f3a5f;
+
+    border:
+        1px solid #d4deeb;
+
+    padding: 7px 12px;
+
+    border-radius: 5px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   DELETED LABEL
+========================================================= */
+
+.deleted-label {
+    display: inline-block;
+
+    background: #eef2f7;
+
+    color: #1f3a5f;
+
+    border:
+        1px solid #cfd9e7;
+
+    padding: 4px 9px;
+
+    border-radius: 4px;
+
+    font-weight: 600;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   METHOD LABEL
+========================================================= */
+
+.method-label {
+    display: inline-block;
+
+    background: #e9eef6;
+
+    color: #1f3a5f;
+
+    padding: 5px 10px;
+
+    border-radius: 5px;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   NO CHANGES
+========================================================= */
+
+.no-changes {
+    background: #eef2f7;
+
+    border-left:
+        4px solid #1f3a5f;
+
+    padding: 15px;
+
+    border-radius: 5px;
+
+    color: #555;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   ENCODING INFORMATION
+========================================================= */
+
+.encoding-info {
+    background: #eef2f7;
+
+    border-left:
+        4px solid #26466f;
+
+    padding: 15px;
+
+    margin: 12px 0;
+
+    border-radius: 5px;
+
+    color: #333;
+}
+
+
+/* =========================================================
+   CATEGORICAL TAGS
+========================================================= */
+
+.tag-container {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+
+.tag {
+    background: #e9eef6;
+
+    color: #1f3a5f;
+
+    padding: 8px 14px;
+
+    border-radius: 20px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.error {
+    color: #c62828;
+
+    font-weight: bold;
+
+    background: #ffebee;
+
+    padding: 12px;
+
+    border-radius: 5px;
+}
+
+
+/* =========================================================
+   CHARTS
+========================================================= */
+
+.chart-grid {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 20px;
+}
+
+
+.chart-card {
+    width: 420px;
+
+    max-width: 100%;
+
+    background: white;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.15);
+
+    padding: 15px;
+}
+
+
+.chart-card img {
+    width: 100%;
+}
+
+
+/* =========================================================
+   RESPONSIVE - 1400
+========================================================= */
+
+@media (max-width: 1400px) {
+
+    .missing-summary {
+        grid-template-columns:
+            repeat(3, minmax(150px, 1fr));
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 1100
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .sidebar {
+        width: 220px;
+    }
+
+
+    .content {
+        padding: 20px;
+    }
+
+
+    .missing-method-options {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .info-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 750
+========================================================= */
+
+@media (max-width: 750px) {
+
+    .container {
+        flex-direction: column;
+    }
+
+
+    .sidebar {
+        width: 100%;
+
+        min-height: auto;
+    }
+
+
+    .sidebar h3 {
+        padding: 12px;
+    }
+
+
+    .sidebar a {
+        padding: 10px 15px;
+    }
+
+
+    .content {
+        padding: 15px;
+    }
+
+
+    .missing-method-options {
+        grid-template-columns: 1fr;
+    }
+
+
+    .missing-summary {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 450
+========================================================= */
+
+@media (max-width: 450px) {
+
+    .content {
+        padding: 10px;
+    }
+
+
+    .card {
+        padding: 15px;
+    }
+
+
+    .missing-summary {
+        grid-template-columns: 1fr;
+    }
+
+
+    .method-option {
+        min-height: 60px;
+
+        font-size: 14px;
+    }
+
+
+    .topbar h1 {
+        font-size: 19px;
+    }
+
 }
