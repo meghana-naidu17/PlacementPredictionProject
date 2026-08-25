@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Logistic Regression - Placement Prediction</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     TOP BAR
+===================================================== -->
+
+<header class="topbar">
+
+    <h1>Placement Prediction Dashboard</h1>
+
+</header>
+
+
+<!-- =====================================================
+     MAIN LAYOUT
+===================================================== -->
+
+<div class="container">
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
+
+    <aside class="sidebar">
+
+        <h3>Modules</h3>
+
+
+        <a
+            href="{{ url_for('data_loading') }}"
+            class="{% if active == 'data-loading' %}active{% endif %}"
+        >
+            Dataset Summary
+        </a>
+
+
+        <a
+            href="{{ url_for('eda_page') }}"
+            class="{% if active == 'eda' %}active{% endif %}"
+        >
+            Exploratory Data Analysis
+        </a>
+
+
+        <a
+            href="{{ url_for('preprocessing_page') }}"
+            class="{% if active == 'preprocessing' %}active{% endif %}"
+        >
+            Data Preprocessing
+        </a>
+
+
+        <a
+            href="{{ url_for('linear_regression_page') }}"
+            class="{% if active == 'linear-regression' %}active{% endif %}"
+        >
+            Linear Regression
+        </a>
+
+
+        <a
+            href="{{ url_for('logistic_regression_page') }}"
+            class="{% if active == 'logistic-regression' %}active{% endif %}"
+        >
+            Logistic Regression
+        </a>
+
+
+        <a
+            href="{{ url_for('machine_learning_page') }}"
+            class="{% if active == 'machine-learning' %}active{% endif %}"
+        >
+            Machine Learning
+        </a>
+
+
+        <a
+            href="{{ url_for('prediction_page') }}"
+            class="{% if active == 'prediction' %}active{% endif %}"
+        >
+            Prediction
+        </a>
+
+    </aside>
+
+
+    <!-- =================================================
+         CONTENT
+    ================================================== -->
+
+    <main class="content">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <section class="card">
+
+            <h2>Logistic Regression</h2>
+
+            <p class="section-description">
+
+                Binary classification model for predicting
+                student placement status using student
+                performance features.
+
+            </p>
+
+        </section>
+
+
+        {% if error %}
+
+        <div class="error">
+
+            {{ error }}
+
+        </div>
+
+        {% endif %}
+
+
+        {% if logistic %}
+
+
+        <!-- =================================================
+             MODEL PERFORMANCE
+        ================================================== -->
+
+        <section class="card model-card">
+
+            <h2>Model Performance</h2>
+
+
+            <div class="model-info-grid">
+
+
+                <div class="model-info-box">
+
+                    <strong>Train Accuracy</strong>
+
+                    <span>
+                        {{ "%.4f"|format(logistic.train_accuracy) }}
+                    </span>
+
+                </div>
+
+
+                <div class="model-info-box">
+
+                    <strong>Test Accuracy</strong>
+
+                    <span>
+                        {{ "%.4f"|format(logistic.test_accuracy) }}
+                    </span>
+
+                </div>
+
+
+                <div class="model-info-box">
+
+                    <strong>Training Records</strong>
+
+                    <span>
+                        {{ logistic.training_records }}
+                    </span>
+
+                </div>
+
+
+                <div class="model-info-box">
+
+                    <strong>Testing Records</strong>
+
+                    <span>
+                        {{ logistic.testing_records }}
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SCALING COMPARISON
+        ================================================== -->
+
+        <section class="card">
+
+            <h2>Scaling Comparison</h2>
+
+            <p class="section-description">
+
+                Comparison of Logistic Regression performance
+                using unscaled data, StandardScaler and
+                MinMaxScaler.
+
+            </p>
+
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Scaling Method</th>
+
+                            <th>Training Accuracy</th>
+
+                            <th>Testing Accuracy</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for row in logistic.scaling_comparison %}
+
+                        <tr>
+
+                            <td>
+                                {{ row.method }}
+                            </td>
+
+                            <td>
+                                {{ "%.4f"|format(row.training_accuracy) }}
+                            </td>
+
+                            <td>
+                                {{ "%.4f"|format(row.testing_accuracy) }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             CHARTS
+        ================================================== -->
+
+        <section class="card">
+
+            <h2>Logistic Regression Charts</h2>
+
+            <p class="section-description">
+
+                Visual analysis of model performance,
+                scaling methods and classification results.
+
+            </p>
+
+
+            <div class="logistic-chart-grid">
+
+
+                <!-- Scaling Chart -->
+
+                <div class="logistic-chart-card">
+
+                    <h3>
+                        Scaling Method Comparison
+                    </h3>
+
+                    <div class="logistic-chart-container">
+
+                        <img
+                            src="{{ url_for('static', filename=logistic.scaling_chart) }}"
+                            alt="Logistic Regression Scaling Comparison"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Confusion Matrix -->
+
+                <div class="logistic-chart-card">
+
+                    <h3>
+                        Confusion Matrix
+                    </h3>
+
+                    <div class="logistic-chart-container">
+
+                        <img
+                            src="{{ url_for('static', filename=logistic.confusion_chart) }}"
+                            alt="Logistic Regression Confusion Matrix"
+                        >
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        {% else %}
+
+
+        <section class="card">
+
+            <p class="error">
+
+                Logistic Regression results are not available.
+
+            </p>
+
+        </section>
+
+
+        {% endif %}
+
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

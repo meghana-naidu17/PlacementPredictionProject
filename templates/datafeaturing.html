@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Data Preprocessing</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<header class="topbar">
+
+    <h1>
+        Placement Prediction Dashboard
+    </h1>
+
+</header>
+
+
+
+<div class="container">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <h3>
+            Modules
+        </h3>
+
+
+        <a href="{{ url_for('data_loading') }}">
+
+            Dataset Summary
+
+        </a>
+
+
+        <a href="{{ url_for('eda_page') }}">
+
+            Exploratory Data Analysis
+
+        </a>
+
+
+        <a href="{{ url_for('preprocessing_page') }}"
+           class="active">
+
+            Data Preprocessing
+
+        </a>
+
+
+        <a href="{{ url_for('linear_regression_page') }}">
+
+            Linear Regression
+
+        </a>
+
+
+        <a class="disabled">
+
+            Machine Learning
+
+        </a>
+
+
+        <a class="disabled">
+
+            Prediction
+
+        </a>
+
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="content">
+
+
+        <!-- =================================================
+             ERROR
+        ================================================== -->
+
+        {% if error %}
+
+        <div class="card">
+
+            <h2>
+                Error
+            </h2>
+
+            <div class="error">
+                {{ error }}
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+
+        {% if preprocessing %}
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="card preprocessing-header">
+
+            <h2>
+                Data Preprocessing
+            </h2>
+
+            <p>
+                Data cleaning, outlier detection,
+                feature encoding and feature scaling.
+            </p>
+
+        </div>
+
+
+
+        <!-- =================================================
+             DATASET INFORMATION
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Dataset Information
+            </h2>
+
+
+            <div class="stats-grid">
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.n_rows }}
+                    </h3>
+
+                    <p>
+                        Total Rows
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.n_columns }}
+                    </h3>
+
+                    <p>
+                        Total Columns
+                    </p>
+
+                </div>
+
+
+                {% if preprocessing.split %}
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.split.train_rows }}
+                    </h3>
+
+                    <p>
+                        Training Rows
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.split.test_rows }}
+                    </h3>
+
+                    <p>
+                        Testing Rows
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             MISSING VALUE HANDLING
+        ================================================== -->
+
+        {% if preprocessing.missing_values %}
+
+        <div class="card">
+
+            <h2>
+                Missing Value Handling
+            </h2>
+
+
+            <form method="POST"
+                  action="{{ url_for('preprocessing_page') }}">
+
+
+                <div class="method-form">
+
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="missing_method"
+                            value="row"
+
+                            {% if preprocessing.missing_values.method == "row" %}
+                            checked
+                            {% endif %}
+                        >
+
+                        Row-wise Deletion
+
+                    </label>
+
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="missing_method"
+                            value="column"
+
+                            {% if preprocessing.missing_values.method == "column" %}
+                            checked
+                            {% endif %}
+                        >
+
+                        Column-wise Deletion
+
+                    </label>
+
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="missing_method"
+                            value="mean"
+
+                            {% if preprocessing.missing_values.method == "mean" %}
+                            checked
+                            {% endif %}
+                        >
+
+                        Mean Imputation
+
+                    </label>
+
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="missing_method"
+                            value="median"
+
+                            {% if preprocessing.missing_values.method == "median" %}
+                            checked
+                            {% endif %}
+                        >
+
+                        Median Imputation
+
+                    </label>
+
+
+                    <button type="submit">
+
+                        Apply Method
+
+                    </button>
+
+
+                </div>
+
+            </form>
+
+
+
+            <div class="selected-method">
+
+                <strong>
+                    Current Method:
+                </strong>
+
+                {{ preprocessing.missing_values.method_name }}
+
+            </div>
+
+
+
+            <div class="stats-grid">
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.missing_values.missing_before }}
+                    </h3>
+
+                    <p>
+                        Missing Before
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.missing_values.missing_after }}
+                    </h3>
+
+                    <p>
+                        Missing After
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.missing_values.rows_deleted }}
+                    </h3>
+
+                    <p>
+                        Rows Deleted
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.missing_values.columns_deleted }}
+                    </h3>
+
+                    <p>
+                        Columns Deleted
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             CHANGES APPLIED
+        ================================================== -->
+
+        {% if preprocessing.changes %}
+
+        <div class="card">
+
+            <h2>
+                Changes Applied
+            </h2>
+
+
+            {% if preprocessing.changes.rows_deleted %}
+
+            <h3>
+                Rows Deleted
+            </h3>
+
+
+            <p>
+
+                Total:
+                <strong>
+                    {{ preprocessing.changes.rows_deleted|length }}
+                </strong>
+
+            </p>
+
+
+            <div class="tag-container">
+
+                {% for index in preprocessing.changes.rows_deleted[:100] %}
+
+                <span class="tag">
+
+                    Row {{ index }}
+
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+
+
+            {% if preprocessing.changes.columns_deleted %}
+
+            <h3>
+                Columns Deleted
+            </h3>
+
+
+            <p>
+
+                Total:
+                <strong>
+                    {{ preprocessing.changes.columns_deleted|length }}
+                </strong>
+
+            </p>
+
+
+            <div class="tag-container">
+
+                {% for column in preprocessing.changes.columns_deleted %}
+
+                <span class="tag">
+
+                    {{ column }}
+
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+
+
+            {% if preprocessing.changes.values_imputed %}
+
+            <h3>
+                Values Imputed
+            </h3>
+
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Column
+                        </th>
+
+                        <th>
+                            Count
+                        </th>
+
+                        <th>
+                            Method
+                        </th>
+
+                        <th>
+                            Value Used
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for item in preprocessing.changes.values_imputed %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.column }}
+                        </td>
+
+                        <td>
+                            {{ item.count }}
+                        </td>
+
+                        <td>
+                            {{ item.method }}
+                        </td>
+
+                        <td>
+                            {{ item.value }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% endif %}
+
+
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             MISSING VALUE DETAILS
+        ================================================== -->
+
+        {% if preprocessing.missing_table %}
+
+        <div class="card">
+
+            <h2>
+                Missing Value Details
+            </h2>
+
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Column
+                        </th>
+
+                        <th>
+                            Before
+                        </th>
+
+                        <th>
+                            After
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for item in preprocessing.missing_table %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.column }}
+                        </td>
+
+                        <td>
+                            {{ item.before }}
+                        </td>
+
+                        <td>
+                            {{ item.after }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             IQR OUTLIER DETECTION
+        ================================================== -->
+
+        {% if preprocessing.iqr %}
+
+        <div class="card">
+
+            <h2>
+                IQR Outlier Detection
+            </h2>
+
+
+            <p>
+
+                Column:
+
+                <strong>
+                    {{ preprocessing.iqr.column }}
+                </strong>
+
+            </p>
+
+
+            <table class="summary-table">
+
+
+                <tr>
+
+                    <td>
+                        Q1
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.q1 }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Q3
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.q3 }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        IQR
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.iqr }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Lower Bound
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.lower_bound }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Upper Bound
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.upper_bound }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Number of Outliers
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.n_outliers }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Minimum Before
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.min_before }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Maximum Before
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.max_before }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Minimum After
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.min_after }}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        Maximum After
+                    </td>
+
+                    <td>
+                        {{ preprocessing.iqr.max_after }}
+                    </td>
+
+                </tr>
+
+
+            </table>
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             TRAIN TEST SPLIT
+        ================================================== -->
+
+        {% if preprocessing.split %}
+
+        <div class="card">
+
+            <h2>
+                Train-Test Split
+            </h2>
+
+
+            <div class="stats-grid">
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.split.total }}
+                    </h3>
+
+                    <p>
+                        Total
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.split.train_rows }}
+                    </h3>
+
+                    <p>
+                        Training
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h3>
+                        {{ preprocessing.split.test_rows }}
+                    </h3>
+
+                    <p>
+                        Testing
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             CATEGORICAL COLUMNS
+        ================================================== -->
+
+        {% if preprocessing.categorical_cols %}
+
+        <div class="card">
+
+            <h2>
+                Categorical Columns
+            </h2>
+
+
+            <div class="tag-container">
+
+                {% for col in preprocessing.categorical_cols %}
+
+                <span class="tag">
+
+                    {{ col }}
+
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             ONE HOT ENCODING
+        ================================================== -->
+
+        {% if preprocessing.onehot_columns %}
+
+        <div class="card">
+
+            <h2>
+                One-Hot Encoding
+            </h2>
+
+
+            <p class="description">
+
+                Categorical values are converted into
+                binary indicator columns.
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Number of encoded columns:
+                </strong>
+
+                {{ preprocessing.onehot_columns|length }}
+
+            </p>
+
+
+            {% if preprocessing.onehot_preview %}
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in preprocessing.onehot_columns %}
+
+                        <th>
+                            {{ col }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in preprocessing.onehot_preview %}
+
+                    <tr>
+
+                        {% for col in preprocessing.onehot_columns %}
+
+                        <td>
+                            {{ row[col] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% endif %}
+
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             ORDINAL ENCODING
+        ================================================== -->
+
+        {% if preprocessing.ordinal_columns %}
+
+        <div class="card">
+
+            <h2>
+                Ordinal Encoding
+            </h2>
+
+
+            <p class="description">
+
+                Ordered categories are converted into
+                numerical values.
+
+            </p>
+
+
+            <table class="summary-table">
+
+
+                <tr>
+
+                    <td>
+                        CollegeTier
+                    </td>
+
+                    <td>
+                        Tier3 → 0,
+                        Tier2 → 1,
+                        Tier1 → 2
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td>
+                        CGPA_Tier
+                    </td>
+
+                    <td>
+                        Low → 0,
+                        Mid → 1,
+                        High → 2
+                    </td>
+
+                </tr>
+
+
+            </table>
+
+
+            {% if preprocessing.ordinal_preview %}
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in preprocessing.ordinal_columns %}
+
+                        <th>
+                            {{ col }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in preprocessing.ordinal_preview %}
+
+                    <tr>
+
+                        {% for col in preprocessing.ordinal_columns %}
+
+                        <td>
+                            {{ row[col] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% endif %}
+
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             TARGET ENCODING
+        ================================================== -->
+
+        {% if preprocessing.target_columns %}
+
+        <div class="card">
+
+            <h2>
+                Target Encoding
+            </h2>
+
+
+            <p class="description">
+
+                Categorical values are replaced by the
+                corresponding target-based value.
+
+            </p>
+
+
+            {% if preprocessing.global_target_mean is defined %}
+
+            <p>
+
+                <strong>
+                    Global Target Mean:
+                </strong>
+
+                {{ preprocessing.global_target_mean }}
+
+            </p>
+
+            {% endif %}
+
+
+
+            {% if preprocessing.target_preview %}
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in preprocessing.target_columns %}
+
+                        <th>
+                            {{ col }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in preprocessing.target_preview %}
+
+                    <tr>
+
+                        {% for col in preprocessing.target_columns %}
+
+                        <td>
+                            {{ row[col] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% endif %}
+
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             EMBEDDING ENCODING
+        ================================================== -->
+
+        {% if preprocessing.embedding_columns %}
+
+        <div class="card">
+
+            <h2>
+                Embedding-Based Encoding
+            </h2>
+
+
+            <p class="description">
+
+                Categories are converted into integer IDs
+                that can later be used with neural network
+                embedding layers.
+
+            </p>
+
+
+            {% if preprocessing.embedding_preview %}
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in preprocessing.embedding_columns %}
+
+                        <th>
+                            {{ col }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in preprocessing.embedding_preview %}
+
+                    <tr>
+
+                        {% for col in preprocessing.embedding_columns %}
+
+                        <td>
+                            {{ row[col] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% endif %}
+
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             NUMERICAL COLUMNS
+        ================================================== -->
+
+        {% if preprocessing.numeric_cols %}
+
+        <div class="card">
+
+            <h2>
+                Numerical Features
+            </h2>
+
+
+            <div class="tag-container">
+
+                {% for col in preprocessing.numeric_cols %}
+
+                <span class="tag">
+
+                    {{ col }}
+
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             BEFORE SCALING
+        ================================================== -->
+
+        {% if preprocessing.before_scaling %}
+
+        <div class="card">
+
+            <h2>
+                Data Before Scaling
+            </h2>
+
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in preprocessing.numeric_cols %}
+
+                        <th>
+                            {{ col }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in preprocessing.before_scaling %}
+
+                    <tr>
+
+                        {% for col in preprocessing.numeric_cols %}
+
+                        <td>
+                            {{ row[col] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             MIN MAX SCALING
+        ================================================== -->
+
+        {% if preprocessing.minmax_preview %}
+
+        <div class="card">
+
+            <h2>
+                Min-Max Scaling
+            </h2>
+
+
+            <p class="description">
+
+                Numerical values are transformed into
+                approximately the range 0 to 1.
+
+            </p>
+
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in preprocessing.numeric_cols %}
+
+                        <th>
+                            {{ col }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in preprocessing.minmax_preview %}
+
+                    <tr>
+
+                        {% for col in preprocessing.numeric_cols %}
+
+                        <td>
+                            {{ row[col] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             STANDARD SCALING
+        ================================================== -->
+
+        {% if preprocessing.standard_preview %}
+
+        <div class="card">
+
+            <h2>
+                Standard Scaling
+            </h2>
+
+
+            <p class="description">
+
+                Numerical values are transformed using
+                the mean and standard deviation.
+
+            </p>
+
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        {% for col in preprocessing.numeric_cols %}
+
+                        <th>
+                            {{ col }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in preprocessing.standard_preview %}
+
+                    <tr>
+
+                        {% for col in preprocessing.numeric_cols %}
+
+                        <td>
+                            {{ row[col] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+
+        {% endif %}
+
+
+    </main>
+
+
+</div>
+
+
+</body>
+
+</html>
