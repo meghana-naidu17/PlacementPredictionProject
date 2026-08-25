@@ -1,16 +1,18 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 
-from load_data import get_data_summary
+from load_data import get_data_summary, get_data_page
 from placement_eda import run_eda
-from datafeaturing import run_preprocessing
+from datafeaturing import run_feature_engineering
+from linear_regression import run_linear_regression
+from logistic_regression import run_logistic_regression
 
 
 app = Flask(__name__)
 
 
-# ============================================================
+# =========================================================
 # HOME
-# ============================================================
+# =========================================================
 
 @app.route("/")
 def index():
@@ -21,94 +23,106 @@ def index():
     )
 
 
-# ============================================================
+# =========================================================
 # DATA LOADING
-# ============================================================
+# =========================================================
 
 @app.route("/data-loading")
 def data_loading():
 
-    error = None
-    summary = None
-
     try:
-
         summary = get_data_summary()
 
-    except FileNotFoundError as e:
-
-        error = str(e)
+        return render_template(
+            "index.html",
+            active="data-loading",
+            summary=summary,
+            error=None
+        )
 
     except Exception as e:
 
-        error = f"Unexpected error: {e}"
+        return render_template(
+            "index.html",
+            active="data-loading",
+            summary=None,
+            error=str(e)
+        )
 
 
-    return render_template(
-        "index.html",
-        active="data-loading",
-        summary=summary,
-        error=error
-    )
+# =========================================================
+# DATASET API
+# =========================================================
+
+@app.route("/api/dataset")
+def dataset_api():
+
+    try:
+
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 20))
+
+        if page < 1:
+            page = 1
+
+        if per_page < 1:
+            per_page = 20
+
+        if per_page > 100:
+            per_page = 100
+
+        data = get_data_page(
+            page=page,
+            per_page=per_page
+        )
+
+        return jsonify(data)
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
-# ============================================================
+# =========================================================
 # EDA
-# ============================================================
+# =========================================================
 
 @app.route("/eda")
 def eda_page():
-
-    error = None
-    results = None
 
     try:
 
         results = run_eda()
 
-    except FileNotFoundError as e:
-
-        error = str(e)
+        return render_template(
+            "eda.html",
+            active="eda",
+            results=results,
+            error=None
+        )
 
     except Exception as e:
 
-        error = f"Unexpected error: {e}"
+        return render_template(
+            "eda.html",
+            active="eda",
+            results=None,
+            error=str(e)
+        )
 
 
-    return render_template(
-        "eda.html",
-        active="eda",
-        results=results,
-        error=error
-    )
-
-
-# ============================================================
+# =========================================================
 # DATA PREPROCESSING
-# ============================================================
+# =========================================================
 
-@app.route(
-    "/preprocessing",
-    methods=["GET", "POST"]
-)
+@app.route("/preprocessing", methods=["GET", "POST"])
 def preprocessing_page():
-
-    error = None
-    preprocessing = None
-
 
     try:
 
-        # ----------------------------------------------------
-        # DEFAULT METHOD
-        # ----------------------------------------------------
-
         missing_method = "median"
-
-
-        # ----------------------------------------------------
-        # GET SELECTED METHOD FROM HTML
-        # ----------------------------------------------------
 
         if request.method == "POST":
 
@@ -117,72 +131,112 @@ def preprocessing_page():
                 "median"
             )
 
-
-        # ----------------------------------------------------
-        # RUN PREPROCESSING
-        # ----------------------------------------------------
-
-        preprocessing = run_preprocessing(
-            missing_method
+        result = run_feature_engineering(
+            missing_method=missing_method
         )
 
-
-        print("\n" + "=" * 80)
-
-        print("PREPROCESSING RESULTS")
-
-        print("=" * 80)
-
-        print(
-            "Selected Method:",
-            missing_method
+        return render_template(
+            "datafeaturing.html",
+            active="preprocessing",
+            preprocessing=result["preprocessing"],
+            error=None
         )
-
-        print(
-            preprocessing.keys()
-        )
-
-
-    except FileNotFoundError as e:
-
-        error = str(e)
-
-        print(
-            "FILE ERROR:",
-            error
-        )
-
 
     except Exception as e:
 
-        error = f"Unexpected error: {e}"
-
-        print(
-            "PREPROCESSING ERROR:",
-            error
+        return render_template(
+            "datafeaturing.html",
+            active="preprocessing",
+            preprocessing=None,
+            error=str(e)
         )
 
 
-    # --------------------------------------------------------
-    # RETURN PAGE
-    # --------------------------------------------------------
+# =========================================================
+# LINEAR REGRESSION
+# =========================================================
+
+@app.route("/linear-regression")
+def linear_regression_page():
+
+    try:
+
+        regression = run_linear_regression()
+
+        return render_template(
+            "linear_regression.html",
+            active="linear-regression",
+            regression=regression,
+            error=None
+        )
+
+    except Exception as e:
+
+        return render_template(
+            "linear_regression.html",
+            active="linear-regression",
+            regression=None,
+            error=str(e)
+        )
+
+
+# =========================================================
+# LOGISTIC REGRESSION
+# =========================================================
+
+@app.route("/logistic-regression")
+def logistic_regression_page():
+
+    try:
+
+        results = run_logistic_regression()
+
+        return render_template(
+            "logistic_regression.html",
+            active="logistic-regression",
+            logistic=results,
+            error=None
+        )
+
+    except Exception as e:
+
+        return render_template(
+            "logistic_regression.html",
+            active="logistic-regression",
+            logistic=None,
+            error=str(e)
+        )
+
+
+# =========================================================
+# MACHINE LEARNING
+# =========================================================
+
+@app.route("/machine-learning")
+def machine_learning_page():
 
     return render_template(
-
-        "datafeaturing.html",
-
-        active="preprocessing",
-
-        preprocessing=preprocessing,
-
-        error=error
-
+        "index.html",
+        active="machine-learning"
     )
 
 
-# ============================================================
-# RUN FLASK
-# ============================================================
+# =========================================================
+# PREDICTION
+# =========================================================
+
+@app.route("/prediction")
+def prediction_page():
+
+    return render_template(
+        "index.html",
+        active="prediction"
+    )
+
+
+# =========================================================
+# RUN APPLICATION
+# =========================================================
 
 if __name__ == "__main__":
 

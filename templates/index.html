@@ -19,16 +19,13 @@
 <body>
 
 
-<!-- =========================================================
-     TOP BAR
-========================================================= -->
-
 <header class="topbar">
 
-    <h1>Placement Prediction Dashboard</h1>
+    <h1>
+        Placement Prediction Dashboard
+    </h1>
 
 </header>
-
 
 
 <div class="container">
@@ -40,62 +37,58 @@
 
     <aside class="sidebar">
 
-        <h3>Modules</h3>
+        <h3>
+            Modules
+        </h3>
 
-
-        <!-- Dataset Summary -->
 
         <a href="{{ url_for('data_loading') }}"
-           class="{% if active=='data-loading' %}active{% endif %}">
+           class="{% if active == 'data-loading' %}active{% endif %}">
 
             Dataset Summary
 
         </a>
 
 
-
-        <!-- EDA -->
-
         <a href="{{ url_for('eda_page') }}"
-           class="{% if active=='eda' %}active{% endif %}">
+           class="{% if active == 'eda' %}active{% endif %}">
 
             Exploratory Data Analysis
 
         </a>
 
 
-
-        <!-- DATA PREPROCESSING -->
-
         <a href="{{ url_for('preprocessing_page') }}"
-           class="{% if active=='preprocessing' %}active{% endif %}">
+           class="{% if active == 'preprocessing' %}active{% endif %}">
 
             Data Preprocessing
 
         </a>
 
 
+        <a href="{{ url_for('linear_regression_page') }}"
+           class="{% if active == 'linear-regression' %}active{% endif %}">
 
-        <!-- Machine Learning -->
+            Linear Regression
+
+        </a>
+        <a href="{{ url_for('logistic_regression_page') }}"
+   class="{% if active == 'logistic-regression' %}active{% endif %}">
+    Logistic Regression
+</a>
+
 
         <a class="disabled">
-
             Machine Learning
-
         </a>
 
-
-
-        <!-- Prediction -->
 
         <a class="disabled">
-
             Prediction
-
         </a>
+
 
     </aside>
-
 
 
     <!-- =====================================================
@@ -105,16 +98,17 @@
     <main class="content">
 
 
-
         <!-- =================================================
-             WELCOME
+             HOME
         ================================================== -->
 
-        {% if active=="none" %}
+        {% if active == "none" %}
 
         <div class="card">
 
-            <h2>Welcome</h2>
+            <h2>
+                Welcome
+            </h2>
 
             <p>
                 Select a module from the left panel.
@@ -126,34 +120,32 @@
 
 
 
-
         <!-- =================================================
-             DATASET SUMMARY
+             DATA LOADING
         ================================================== -->
 
-        {% if active=="data-loading" %}
+        {% if active == "data-loading" %}
 
 
-        {% if error %}
+        <!-- DATASET SUMMARY -->
 
         <div class="card">
+
+            <h2>
+                Dataset Summary
+            </h2>
+
+
+            {% if error %}
 
             <div class="error">
                 {{ error }}
             </div>
 
-        </div>
-
-        {% endif %}
+            {% endif %}
 
 
-
-        {% if summary %}
-
-        <div class="card">
-
-            <h2>Dataset Summary</h2>
-
+            {% if summary %}
 
             <table class="summary-table">
 
@@ -184,63 +176,50 @@
 
             </table>
 
+            {% endif %}
+
         </div>
 
 
 
-        <!-- COLUMN INFORMATION -->
+        <!-- =================================================
+             COMPLETE DATASET
+        ================================================== -->
 
-        <div class="card">
+        <div class="card dataset-card">
 
-            <h2>Column Information</h2>
+            <h2>
+                Dataset Records
+            </h2>
 
 
-            <div class="table-wrapper">
+            <p class="dataset-info">
 
-                <table class="data-table">
+                Showing
+                <span id="startRow">0</span>
+                -
+                <span id="endRow">0</span>
 
-                    <thead>
+                of
 
-                    <tr>
+                <span id="totalRows">0</span>
+                rows
 
-                        <th>Column</th>
+            </p>
 
-                        <th>Data Type</th>
 
-                        <th>Missing</th>
+            <!-- TABLE -->
 
-                        <th>Missing %</th>
+            <div class="dataset-table-wrapper">
 
-                        <th>Unique</th>
+                <table id="datasetTable">
 
-                    </tr>
+                    <thead id="datasetHead">
 
                     </thead>
 
 
-                    <tbody>
-
-                    {% for col in summary.columns %}
-
-                    <tr>
-
-                        <td>{{ col }}</td>
-
-                        <td>{{ summary.dtypes[col] }}</td>
-
-                        <td>{{ summary.missing_counts[col] }}</td>
-
-                        <td>
-                            {{ summary.missing_percentages[col] }}%
-                        </td>
-
-                        <td>
-                            {{ summary.unique_values[col] }}
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
+                    <tbody id="datasetBody">
 
                     </tbody>
 
@@ -248,65 +227,149 @@
 
             </div>
 
-        </div>
 
+            <!-- LOADING -->
 
+            <div id="loadingMessage"
+                 class="loading-message">
 
-        <!-- DATASET PREVIEW -->
-
-        <div class="card">
-
-            <h2>Dataset Preview</h2>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in summary.columns %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in summary.preview %}
-
-                    <tr>
-
-                        {% for col in summary.columns %}
-
-                        <td>{{ row[col] }}</td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
+                Loading dataset...
 
             </div>
 
+
+            <!-- ERROR -->
+
+            <div id="datasetError"
+                 class="error"
+                 style="display: none;">
+
+            </div>
+
+
+            <!-- =================================================
+                 PAGINATION
+            ================================================== -->
+
+            <div class="pagination">
+
+
+                <button
+                    id="firstBtn"
+                    onclick="goToFirstPage()">
+
+                    First
+
+                </button>
+
+
+                <button
+                    id="previousBtn"
+                    onclick="previousPage()">
+
+                    Previous
+
+                </button>
+
+
+                <span id="pageInfo">
+
+                    Page 1 of 1
+
+                </span>
+
+
+                <button
+                    id="nextBtn"
+                    onclick="nextPage()">
+
+                    Next
+
+                </button>
+
+
+                <button
+                    id="lastBtn"
+                    onclick="goToLastPage()">
+
+                    Last
+
+                </button>
+
+
+            </div>
+
+
+            <!-- ROWS PER PAGE -->
+
+            <div class="rows-control">
+
+                <label for="rowsPerPage">
+
+                    Rows per page:
+
+                </label>
+
+
+                <select
+                    id="rowsPerPage"
+                    onchange="changeRowsPerPage()">
+
+                    <option value="10">
+                        10
+                    </option>
+
+                    <option value="20"
+                            selected>
+
+                        20
+
+                    </option>
+
+                    <option value="50">
+
+                        50
+
+                    </option>
+
+                    <option value="100">
+
+                        100
+
+                    </option>
+
+                </select>
+
+            </div>
+
+
         </div>
 
 
         {% endif %}
 
-        {% endif %}
 
+
+        <!-- =================================================
+             EDA
+        ================================================== -->
+
+        {% if active == "eda" %}
+
+        <div class="card">
+
+            <h2>
+                Exploratory Data Analysis
+            </h2>
+
+            <p>
+                Explore the dataset using statistical summaries
+                and visualizations.
+            </p>
+
+        </div>
+
+        {% endif %}
 
 
 
@@ -314,843 +377,529 @@
              DATA PREPROCESSING
         ================================================== -->
 
-        {% if active=="preprocessing" %}
+        {% if active == "preprocessing" %}
 
+        <div class="card">
 
-
-        <!-- PAGE TITLE -->
-
-        <div class="card preprocessing-header">
-
-            <h2>Data Preprocessing</h2>
+            <h2>
+                Data Preprocessing
+            </h2>
 
             <p>
-                Outlier detection, train-test splitting,
-                encoding and feature scaling.
+                Outlier detection, encoding, train-test splitting
+                and feature scaling.
             </p>
 
         </div>
 
-
-
-        <!-- =================================================
-             DATASET INFORMATION
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Dataset Information</h2>
-
-
-            <div class="stats-grid">
-
-                <div class="stat-box">
-
-                    <h3>{{ preprocessing.n_rows }}</h3>
-
-                    <p>Total Rows</p>
-
-                </div>
-
-
-                <div class="stat-box">
-
-                    <h3>{{ preprocessing.n_columns }}</h3>
-
-                    <p>Total Columns</p>
-
-                </div>
-
-
-                <div class="stat-box">
-
-                    <h3>{{ preprocessing.split.train_rows }}</h3>
-
-                    <p>Training Rows</p>
-
-                </div>
-
-
-                <div class="stat-box">
-
-                    <h3>{{ preprocessing.split.test_rows }}</h3>
-
-                    <p>Testing Rows</p>
-
-                </div>
-
-            </div>
-
-        </div>
-
+        {% endif %}
 
 
 
         <!-- =================================================
-             IQR OUTLIER DETECTION
+             LINEAR REGRESSION
         ================================================== -->
+
+        {% if active == "linear-regression" %}
 
         <div class="card">
 
-            <h2>IQR Outlier Detection</h2>
+            <h2>
+                Linear Regression
+            </h2>
 
-            <p class="description">
-
-                Column:
-                <strong>
-                    {{ preprocessing.iqr.column }}
-                </strong>
-
+            <p>
+                Linear Regression module for placement prediction.
             </p>
 
-
-            <table class="summary-table">
-
-                <tr>
-
-                    <td>Q1</td>
-
-                    <td>
-                        {{ preprocessing.iqr.q1 }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Q3</td>
-
-                    <td>
-                        {{ preprocessing.iqr.q3 }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>IQR</td>
-
-                    <td>
-                        {{ preprocessing.iqr.iqr }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Lower Bound</td>
-
-                    <td>
-                        {{ preprocessing.iqr.lower_bound }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Upper Bound</td>
-
-                    <td>
-                        {{ preprocessing.iqr.upper_bound }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Number of Outliers</td>
-
-                    <td>
-                        {{ preprocessing.iqr.n_outliers }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Minimum Before</td>
-
-                    <td>
-                        {{ preprocessing.iqr.min_before }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Maximum Before</td>
-
-                    <td>
-                        {{ preprocessing.iqr.max_before }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Minimum After</td>
-
-                    <td>
-                        {{ preprocessing.iqr.min_after }}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>Maximum After</td>
-
-                    <td>
-                        {{ preprocessing.iqr.max_after }}
-                    </td>
-
-                </tr>
-
-            </table>
-
         </div>
-
-
-
-
-        <!-- =================================================
-             TRAIN TEST SPLIT
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Train-Test Split</h2>
-
-
-            <div class="stats-grid">
-
-                <div class="stat-box">
-
-                    <h3>
-                        {{ preprocessing.split.total }}
-                    </h3>
-
-                    <p>Total</p>
-
-                </div>
-
-
-                <div class="stat-box">
-
-                    <h3>
-                        {{ preprocessing.split.train_rows }}
-                    </h3>
-
-                    <p>
-                        Training
-                        ({{ preprocessing.split.train_pct }}%)
-                    </p>
-
-                </div>
-
-
-                <div class="stat-box">
-
-                    <h3>
-                        {{ preprocessing.split.test_rows }}
-                    </h3>
-
-                    <p>
-                        Testing
-                        ({{ preprocessing.split.test_pct }}%)
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             CATEGORICAL COLUMNS
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Categorical Columns</h2>
-
-
-            <div class="tag-container">
-
-                {% for col in preprocessing.categorical_cols %}
-
-                <span class="tag">
-
-                    {{ col }}
-
-                </span>
-
-                {% endfor %}
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             ONE-HOT ENCODING
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>One-Hot Encoding</h2>
-
-            <p class="description">
-
-                Converts categorical values into binary
-                columns.
-
-            </p>
-
-
-            <div class="encoding-info">
-
-                <strong>
-                    Number of encoded columns:
-                </strong>
-
-                {{ preprocessing.onehot_columns|length }}
-
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in preprocessing.onehot_columns %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in preprocessing.onehot_preview %}
-
-                    <tr>
-
-                        {% for col in preprocessing.onehot_columns %}
-
-                        <td>
-                            {{ row[col] }}
-                        </td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             ORDINAL ENCODING
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Ordinal Encoding</h2>
-
-            <p class="description">
-
-                Converts ordered categories into numerical
-                values.
-
-            </p>
-
-
-            <table class="summary-table">
-
-                <tr>
-
-                    <td>CollegeTier</td>
-
-                    <td>
-                        Tier3 → 0,
-                        Tier2 → 1,
-                        Tier1 → 2
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>CGPA_Tier</td>
-
-                    <td>
-                        Low → 0,
-                        Mid → 1,
-                        High → 2
-                    </td>
-
-                </tr>
-
-            </table>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in preprocessing.ordinal_columns %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in preprocessing.ordinal_preview %}
-
-                    <tr>
-
-                        {% for col in preprocessing.ordinal_columns %}
-
-                        <td>
-                            {{ row[col] }}
-                        </td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             TARGET ENCODING
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Target Encoding</h2>
-
-            <p class="description">
-
-                Each categorical value is replaced by the
-                mean of the target variable
-                <strong>PlacementStatus</strong>.
-
-            </p>
-
-
-            <div class="encoding-info">
-
-                <strong>
-                    Target:
-                </strong>
-
-                PlacementStatus
-
-                <br><br>
-
-                <strong>
-                    Global Target Mean:
-                </strong>
-
-                {{ preprocessing.global_target_mean }}
-
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in preprocessing.target_columns %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in preprocessing.target_preview %}
-
-                    <tr>
-
-                        {% for col in preprocessing.target_columns %}
-
-                        <td>
-                            {{ row[col] }}
-                        </td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             EMBEDDING ENCODING
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Embedding-Based Encoding</h2>
-
-            <p class="description">
-
-                Categories are converted into integer IDs.
-                These IDs can later be supplied to a neural
-                network embedding layer.
-
-            </p>
-
-
-            <div class="encoding-example">
-
-                <strong>Example:</strong>
-
-                Male → 0 &nbsp;&nbsp;
-                Female → 1
-
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in preprocessing.embedding_columns %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in preprocessing.embedding_preview %}
-
-                    <tr>
-
-                        {% for col in preprocessing.embedding_columns %}
-
-                        <td>
-                            {{ row[col] }}
-                        </td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             NUMERICAL COLUMNS
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Numerical Features</h2>
-
-
-            <div class="tag-container">
-
-                {% for col in preprocessing.numeric_cols %}
-
-                <span class="tag">
-
-                    {{ col }}
-
-                </span>
-
-                {% endfor %}
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             BEFORE SCALING
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Data Before Scaling</h2>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in preprocessing.numeric_cols %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in preprocessing.before_scaling %}
-
-                    <tr>
-
-                        {% for col in preprocessing.numeric_cols %}
-
-                        <td>
-                            {{ row[col] }}
-                        </td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             MIN MAX SCALING
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Min-Max Scaling</h2>
-
-            <p class="description">
-
-                Values are transformed approximately into
-                the range 0 to 1.
-
-            </p>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in preprocessing.numeric_cols %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in preprocessing.minmax_preview %}
-
-                    <tr>
-
-                        {% for col in preprocessing.numeric_cols %}
-
-                        <td>
-                            {{ row[col] }}
-                        </td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-
-
-        <!-- =================================================
-             STANDARD SCALING
-        ================================================== -->
-
-        <div class="card">
-
-            <h2>Standard Scaling</h2>
-
-            <p class="description">
-
-                Values are transformed using mean and
-                standard deviation.
-
-            </p>
-
-
-            <div class="table-wrapper">
-
-                <table class="data-table">
-
-                    <thead>
-
-                    <tr>
-
-                        {% for col in preprocessing.numeric_cols %}
-
-                        <th>{{ col }}</th>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                    {% for row in preprocessing.standard_preview %}
-
-                    <tr>
-
-                        {% for col in preprocessing.numeric_cols %}
-
-                        <td>
-                            {{ row[col] }}
-                        </td>
-
-                        {% endfor %}
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
 
         {% endif %}
 
 
     </main>
 
+
 </div>
+
+
+
+<!-- =========================================================
+     DATASET JAVASCRIPT
+========================================================= -->
+
+{% if active == "data-loading" %}
+
+<script>
+
+    // ========================================================
+    // GLOBAL VARIABLES
+    // ========================================================
+
+    let currentPage = 1;
+
+    let rowsPerPage = 20;
+
+    let totalPages = 1;
+
+    let totalRows = 0;
+
+
+    // ========================================================
+    // LOAD DATASET
+    // ========================================================
+
+    async function loadDataset(page = 1) {
+
+        const loadingMessage =
+            document.getElementById(
+                "loadingMessage"
+            );
+
+        const errorMessage =
+            document.getElementById(
+                "datasetError"
+            );
+
+
+        // Show loading
+        loadingMessage.style.display =
+            "block";
+
+
+        // Hide previous error
+        errorMessage.style.display =
+            "none";
+
+
+        try {
+
+            const response = await fetch(
+                `/api/dataset?page=${page}&per_page=${rowsPerPage}`
+            );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Server returned ${response.status}`
+                );
+
+            }
+
+
+            const result =
+                await response.json();
+
+
+            // Check API error
+            if (result.error) {
+
+                throw new Error(
+                    result.error
+                );
+
+            }
+
+
+            // Update variables
+
+            currentPage =
+                result.page;
+
+            totalPages =
+                result.total_pages;
+
+            totalRows =
+                result.total_rows;
+
+
+            // Display table
+
+            displayDataset(
+                result.columns,
+                result.data
+            );
+
+
+            // Update information
+
+            updateDatasetInfo(
+                result.start_row,
+                result.end_row,
+                result.total_rows
+            );
+
+
+            // Update pagination
+
+            updatePagination();
+
+
+        }
+        catch (error) {
+
+            console.error(
+                "Dataset loading error:",
+                error
+            );
+
+
+            errorMessage.textContent =
+                "Error loading dataset: "
+                + error.message;
+
+
+            errorMessage.style.display =
+                "block";
+
+        }
+        finally {
+
+            loadingMessage.style.display =
+                "none";
+
+        }
+
+    }
+
+
+
+    // ========================================================
+    // DISPLAY DATASET TABLE
+    // ========================================================
+
+    function displayDataset(
+        columns,
+        data
+    ) {
+
+        const tableHead =
+            document.getElementById(
+                "datasetHead"
+            );
+
+
+        const tableBody =
+            document.getElementById(
+                "datasetBody"
+            );
+
+
+        // Clear old table
+
+        tableHead.innerHTML = "";
+
+        tableBody.innerHTML = "";
+
+
+        // ====================================================
+        // CREATE HEADER
+        // ====================================================
+
+        const headerRow =
+            document.createElement("tr");
+
+
+        columns.forEach(
+            function(column) {
+
+                const th =
+                    document.createElement(
+                        "th"
+                    );
+
+
+                th.textContent =
+                    column;
+
+
+                headerRow.appendChild(
+                    th
+                );
+
+            }
+        );
+
+
+        tableHead.appendChild(
+            headerRow
+        );
+
+
+        // ====================================================
+        // CREATE DATA ROWS
+        // ====================================================
+
+        data.forEach(
+            function(row) {
+
+                const tr =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                columns.forEach(
+                    function(column) {
+
+                        const td =
+                            document.createElement(
+                                "td"
+                            );
+
+
+                        let value =
+                            row[column];
+
+
+                        // Handle null values
+
+                        if (
+                            value === null ||
+                            value === undefined
+                        ) {
+
+                            value = "";
+
+                        }
+
+
+                        // Handle objects
+
+                        if (
+                            typeof value ===
+                            "object"
+                        ) {
+
+                            value =
+                                JSON.stringify(
+                                    value
+                                );
+
+                        }
+
+
+                        td.textContent =
+                            value;
+
+
+                        tr.appendChild(
+                            td
+                        );
+
+                    }
+                );
+
+
+                tableBody.appendChild(
+                    tr
+                );
+
+            }
+        );
+
+    }
+
+
+
+    // ========================================================
+    // UPDATE DATASET INFORMATION
+    // ========================================================
+
+    function updateDatasetInfo(
+        startRow,
+        endRow,
+        total
+    ) {
+
+        document.getElementById(
+            "startRow"
+        ).textContent =
+            startRow;
+
+
+        document.getElementById(
+            "endRow"
+        ).textContent =
+            endRow;
+
+
+        document.getElementById(
+            "totalRows"
+        ).textContent =
+            total;
+
+    }
+
+
+
+    // ========================================================
+    // UPDATE PAGINATION
+    // ========================================================
+
+    function updatePagination() {
+
+        document.getElementById(
+            "pageInfo"
+        ).textContent =
+            `Page ${currentPage} of ${totalPages}`;
+
+
+        // Previous
+
+        document.getElementById(
+            "previousBtn"
+        ).disabled =
+            currentPage <= 1;
+
+
+        // Next
+
+        document.getElementById(
+            "nextBtn"
+        ).disabled =
+            currentPage >= totalPages;
+
+
+        // First
+
+        document.getElementById(
+            "firstBtn"
+        ).disabled =
+            currentPage <= 1;
+
+
+        // Last
+
+        document.getElementById(
+            "lastBtn"
+        ).disabled =
+            currentPage >= totalPages;
+
+    }
+
+
+
+    // ========================================================
+    // NEXT PAGE
+    // ========================================================
+
+    function nextPage() {
+
+        if (
+            currentPage < totalPages
+        ) {
+
+            loadDataset(
+                currentPage + 1
+            );
+
+        }
+
+    }
+
+
+
+    // ========================================================
+    // PREVIOUS PAGE
+    // ========================================================
+
+    function previousPage() {
+
+        if (
+            currentPage > 1
+        ) {
+
+            loadDataset(
+                currentPage - 1
+            );
+
+        }
+
+    }
+
+
+
+    // ========================================================
+    // FIRST PAGE
+    // ========================================================
+
+    function goToFirstPage() {
+
+        if (
+            currentPage !== 1
+        ) {
+
+            loadDataset(1);
+
+        }
+
+    }
+
+
+
+    // ========================================================
+    // LAST PAGE
+    // ========================================================
+
+    function goToLastPage() {
+
+        if (
+            currentPage !== totalPages
+        ) {
+
+            loadDataset(
+                totalPages
+            );
+
+        }
+
+    }
+
+
+
+    // ========================================================
+    // CHANGE ROWS PER PAGE
+    // ========================================================
+
+    function changeRowsPerPage() {
+
+        rowsPerPage =
+            parseInt(
+                document.getElementById(
+                    "rowsPerPage"
+                ).value
+            );
+
+
+        // Go back to first page
+
+        currentPage = 1;
+
+
+        loadDataset(1);
+
+    }
+
+
+
+    // ========================================================
+    // LOAD FIRST PAGE AUTOMATICALLY
+    // ========================================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function() {
+
+            loadDataset(1);
+
+        }
+    );
+
+</script>
+
+{% endif %}
 
 
 </body>
