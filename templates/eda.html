@@ -38,14 +38,26 @@
         <a class="disabled">
             Data Preprocessing
         </a>
+         <a href="{{ url_for('linear_regression_page') }}">
 
-        <a class="disabled">
-             Machine Learning
+            Linear Regression
+
         </a>
 
-        <a class="disabled">
-             Prediction
+
+        <a href="{{ url_for('logistic_regression_page') }}">
+
+            Logistic Regression
+
         </a>
+
+        <a href="{{ url_for('tree_based_page') }}"
+           class="active">
+
+            Tree Based Models
+
+        </a>
+
 
     </aside>
 

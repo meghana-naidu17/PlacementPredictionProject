@@ -1,10 +1,27 @@
 from flask import Flask, render_template, request, jsonify
 
-from load_data import get_data_summary, get_data_page
+from load_data import (
+    get_data_summary,
+    get_data_page
+)
+
 from placement_eda import run_eda
-from datafeaturing import run_feature_engineering
-from linear_regression import run_linear_regression
-from logistic_regression import run_logistic_regression
+
+from datafeaturing import (
+    run_feature_engineering
+)
+
+from linear_regression import (
+    run_linear_regression
+)
+
+from logistic_regression import (
+    run_logistic_regression
+)
+
+from treebased import (
+    run_tree_based
+)
 
 
 app = Flask(__name__)
@@ -15,6 +32,15 @@ app = Flask(__name__)
 # =========================================================
 
 @app.route("/")
+def home():
+
+    return render_template(
+        "index.html",
+        active="none"
+    )
+
+
+@app.route("/index")
 def index():
 
     return render_template(
@@ -31,22 +57,33 @@ def index():
 def data_loading():
 
     try:
+
         summary = get_data_summary()
 
         return render_template(
+
             "index.html",
+
             active="data-loading",
+
             summary=summary,
+
             error=None
+
         )
 
     except Exception as e:
 
         return render_template(
+
             "index.html",
+
             active="data-loading",
+
             summary=None,
+
             error=str(e)
+
         )
 
 
@@ -59,8 +96,19 @@ def dataset_api():
 
     try:
 
-        page = int(request.args.get("page", 1))
-        per_page = int(request.args.get("per_page", 20))
+        page = int(
+            request.args.get(
+                "page",
+                1
+            )
+        )
+
+        per_page = int(
+            request.args.get(
+                "per_page",
+                20
+            )
+        )
 
         if page < 1:
             page = 1
@@ -72,8 +120,11 @@ def dataset_api():
             per_page = 100
 
         data = get_data_page(
+
             page=page,
+
             per_page=per_page
+
         )
 
         return jsonify(data)
@@ -81,7 +132,10 @@ def dataset_api():
     except Exception as e:
 
         return jsonify({
-            "error": str(e)
+
+            "error":
+            str(e)
+
         }), 500
 
 
@@ -97,27 +151,40 @@ def eda_page():
         results = run_eda()
 
         return render_template(
+
             "eda.html",
+
             active="eda",
+
             results=results,
+
             error=None
+
         )
 
     except Exception as e:
 
         return render_template(
+
             "eda.html",
+
             active="eda",
+
             results=None,
+
             error=str(e)
+
         )
 
 
 # =========================================================
-# DATA PREPROCESSING
+# PREPROCESSING
 # =========================================================
 
-@app.route("/preprocessing", methods=["GET", "POST"])
+@app.route(
+    "/preprocessing",
+    methods=["GET", "POST"]
+)
 def preprocessing_page():
 
     try:
@@ -127,28 +194,45 @@ def preprocessing_page():
         if request.method == "POST":
 
             missing_method = request.form.get(
+
                 "missing_method",
+
                 "median"
+
             )
 
         result = run_feature_engineering(
+
             missing_method=missing_method
+
         )
 
         return render_template(
+
             "datafeaturing.html",
+
             active="preprocessing",
-            preprocessing=result["preprocessing"],
+
+            preprocessing=result.get(
+                "preprocessing"
+            ),
+
             error=None
+
         )
 
     except Exception as e:
 
         return render_template(
+
             "datafeaturing.html",
+
             active="preprocessing",
+
             preprocessing=None,
+
             error=str(e)
+
         )
 
 
@@ -156,56 +240,134 @@ def preprocessing_page():
 # LINEAR REGRESSION
 # =========================================================
 
-@app.route("/linear-regression")
+@app.route(
+    "/linear-regression",
+    methods=["GET", "POST"]
+)
 def linear_regression_page():
 
-    try:
+    results = None
 
-        regression = run_linear_regression()
+    error = None
 
-        return render_template(
-            "linear_regression.html",
-            active="linear-regression",
-            regression=regression,
-            error=None
+    selected_regularization = "none"
+
+    if request.method == "POST":
+
+        selected_regularization = request.form.get(
+
+            "regularization",
+
+            "none"
+
         )
 
-    except Exception as e:
+        try:
 
-        return render_template(
-            "linear_regression.html",
-            active="linear-regression",
-            regression=None,
-            error=str(e)
-        )
+            results = run_linear_regression(
+
+                regularization=
+                selected_regularization
+
+            )
+
+            if not results:
+
+                error = (
+                    "No result was returned."
+                )
+
+            elif results.get("error"):
+
+                error = results["error"]
+
+                results = None
+
+        except Exception as e:
+
+            error = str(e)
+
+    return render_template(
+
+        "linear_regression.html",
+
+        active="linear-regression",
+
+        results=results,
+
+        selected_regularization=
+        selected_regularization,
+
+        error=error
+
+    )
 
 
 # =========================================================
 # LOGISTIC REGRESSION
 # =========================================================
 
-@app.route("/logistic-regression")
+@app.route(
+    "/logistic-regression",
+    methods=["GET", "POST"]
+)
 def logistic_regression_page():
 
-    try:
+    results = None
 
-        results = run_logistic_regression()
+    error = None
 
-        return render_template(
-            "logistic_regression.html",
-            active="logistic-regression",
-            logistic=results,
-            error=None
+    selected_regularization = "none"
+
+    if request.method == "POST":
+
+        selected_regularization = request.form.get(
+
+            "regularization",
+
+            "none"
+
         )
 
-    except Exception as e:
+        try:
 
-        return render_template(
-            "logistic_regression.html",
-            active="logistic-regression",
-            logistic=None,
-            error=str(e)
-        )
+            results = run_logistic_regression(
+
+                regularization=
+                selected_regularization
+
+            )
+
+            if not results:
+
+                error = (
+                    "No result was returned."
+                )
+
+            elif results.get("error"):
+
+                error = results["error"]
+
+                results = None
+
+        except Exception as e:
+
+            error = str(e)
+
+    return render_template(
+
+        "logistic_regression.html",
+
+        active="logistic-regression",
+
+        logistic=results,
+
+        selected_regularization=
+        selected_regularization,
+
+        error=error
+
+    )
 
 
 # =========================================================
@@ -216,8 +378,11 @@ def logistic_regression_page():
 def machine_learning_page():
 
     return render_template(
+
         "index.html",
+
         active="machine-learning"
+
     )
 
 
@@ -229,13 +394,79 @@ def machine_learning_page():
 def prediction_page():
 
     return render_template(
+
         "index.html",
+
         active="prediction"
+
     )
 
 
 # =========================================================
-# RUN APPLICATION
+# TREE BASED MODELS
+# =========================================================
+
+@app.route(
+    "/tree-based",
+    methods=["GET", "POST"]
+)
+def tree_based_page():
+
+    results = None
+
+    error = None
+
+    selected_model = None
+
+    if request.method == "POST":
+
+        selected_model = request.form.get(
+            "model"
+        )
+
+        if not selected_model:
+
+            error = (
+                "Please select a tree-based algorithm."
+            )
+
+        else:
+
+            try:
+
+                results = run_tree_based(
+                    selected_model
+                )
+
+                if results and results.get(
+                    "error"
+                ):
+
+                    error = results["error"]
+
+                    results = None
+
+            except Exception as e:
+
+                error = str(e)
+
+    return render_template(
+
+        "treebased.html",
+
+        active="tree-based",
+
+        results=results,
+
+        selected_model=selected_model,
+
+        error=error
+
+    )
+
+
+# =========================================================
+# RUN
 # =========================================================
 
 if __name__ == "__main__":

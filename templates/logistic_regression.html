@@ -5,110 +5,82 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <title>Logistic Regression - Placement Prediction</title>
+    <title>Logistic Regression</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
 </head>
 
+
 <body>
 
-<!-- =====================================================
-     TOP BAR
-===================================================== -->
-
-<header class="topbar">
-
-    <h1>Placement Prediction Dashboard</h1>
-
-</header>
-
-
-<!-- =====================================================
-     MAIN LAYOUT
-===================================================== -->
 
 <div class="container">
 
 
-    <!-- =================================================
+    <!-- =====================================================
          SIDEBAR
-    ================================================== -->
+    ====================================================== -->
 
     <aside class="sidebar">
 
-        <h3>Modules</h3>
+        <h3>
+            Modules
+        </h3>
 
 
-        <a
-            href="{{ url_for('data_loading') }}"
-            class="{% if active == 'data-loading' %}active{% endif %}"
-        >
+        <a href="{{ url_for('data_loading') }}">
+
             Dataset Summary
+
         </a>
 
 
-        <a
-            href="{{ url_for('eda_page') }}"
-            class="{% if active == 'eda' %}active{% endif %}"
-        >
+        <a href="{{ url_for('eda_page') }}">
+
             Exploratory Data Analysis
+
         </a>
 
 
-        <a
-            href="{{ url_for('preprocessing_page') }}"
-            class="{% if active == 'preprocessing' %}active{% endif %}"
-        >
+        <a href="{{ url_for('preprocessing_page') }}">
+
             Data Preprocessing
+
         </a>
 
 
-        <a
-            href="{{ url_for('linear_regression_page') }}"
-            class="{% if active == 'linear-regression' %}active{% endif %}"
-        >
+        <a href="{{ url_for('linear_regression_page') }}">
+
             Linear Regression
+
         </a>
 
 
-        <a
-            href="{{ url_for('logistic_regression_page') }}"
-            class="{% if active == 'logistic-regression' %}active{% endif %}"
-        >
+        <a href="{{ url_for('logistic_regression_page') }}"
+           class="active">
+
             Logistic Regression
+
         </a>
 
 
-        <a
-            href="{{ url_for('machine_learning_page') }}"
-            class="{% if active == 'machine-learning' %}active{% endif %}"
-        >
-            Machine Learning
-        </a>
+        <a href="{{ url_for('tree_based_page') }}">
 
+            Tree Based Models
 
-        <a
-            href="{{ url_for('prediction_page') }}"
-            class="{% if active == 'prediction' %}active{% endif %}"
-        >
-            Prediction
         </a>
 
     </aside>
 
 
-    <!-- =================================================
+    <!-- =====================================================
          CONTENT
-    ================================================== -->
+    ====================================================== -->
 
     <main class="content">
 
@@ -117,24 +89,26 @@
              HEADER
         ================================================== -->
 
-        <section class="card">
+        <div class="card logistic-header">
 
-            <h2>Logistic Regression</h2>
+            <h2>
+                Logistic Regression
+            </h2>
 
-            <p class="section-description">
-
-                Binary classification model for predicting
-                student placement status using student
-                performance features.
-
+            <p>
+                Predict Placement Status using Logistic Regression.
             </p>
 
-        </section>
+        </div>
 
+
+        <!-- =================================================
+             ERROR
+        ================================================== -->
 
         {% if error %}
 
-        <div class="error">
+        <div class="logistic-error">
 
             {{ error }}
 
@@ -143,16 +117,103 @@
         {% endif %}
 
 
+        <!-- =================================================
+             MODEL SELECTION
+        ================================================== -->
+
+        <div class="logistic-card model-card">
+
+            <h2>
+                Select Regularization
+            </h2>
+
+            <form method="POST"
+                  action="{{ url_for('logistic_regression_page') }}">
+
+
+                <label for="regularization">
+
+                    Regularization Technique
+
+                </label>
+
+
+                <select
+                    id="regularization"
+                    name="regularization"
+                    class="model-select"
+                    required>
+
+
+                    <option
+                        value="none"
+                        {% if selected_regularization == "none" %}
+                        selected
+                        {% endif %}
+                    >
+
+                        Without Regularization
+
+                    </option>
+
+
+                    <option
+                        value="l2"
+                        {% if selected_regularization == "l2" %}
+                        selected
+                        {% endif %}
+                    >
+
+                        L2 Regularization
+
+                    </option>
+
+
+                    <option
+                        value="l1"
+                        {% if selected_regularization == "l1" %}
+                        selected
+                        {% endif %}
+                    >
+
+                        L1 Regularization
+
+                    </option>
+
+
+                </select>
+
+
+                <button
+                    type="submit"
+                    class="run-model-button">
+
+                    Run Logistic Regression
+
+                </button>
+
+
+            </form>
+
+        </div>
+
+
+        <!-- =================================================
+             RESULTS
+        ================================================== -->
+
         {% if logistic %}
 
 
         <!-- =================================================
-             MODEL PERFORMANCE
+             MODEL INFORMATION
         ================================================== -->
 
-        <section class="card model-card">
+        <div class="card">
 
-            <h2>Model Performance</h2>
+            <h2>
+                Model Information
+            </h2>
 
 
             <div class="model-info-grid">
@@ -160,10 +221,12 @@
 
                 <div class="model-info-box">
 
-                    <strong>Train Accuracy</strong>
+                    <strong>
+                        Model
+                    </strong>
 
                     <span>
-                        {{ "%.4f"|format(logistic.train_accuracy) }}
+                        {{ logistic.model_name }}
                     </span>
 
                 </div>
@@ -171,10 +234,12 @@
 
                 <div class="model-info-box">
 
-                    <strong>Test Accuracy</strong>
+                    <strong>
+                        Regularization
+                    </strong>
 
                     <span>
-                        {{ "%.4f"|format(logistic.test_accuracy) }}
+                        {{ logistic.regularization }}
                     </span>
 
                 </div>
@@ -182,10 +247,12 @@
 
                 <div class="model-info-box">
 
-                    <strong>Training Records</strong>
+                    <strong>
+                        Samples
+                    </strong>
 
                     <span>
-                        {{ logistic.training_records }}
+                        {{ logistic.samples }}
                     </span>
 
                 </div>
@@ -193,10 +260,25 @@
 
                 <div class="model-info-box">
 
-                    <strong>Testing Records</strong>
+                    <strong>
+                        Training Samples
+                    </strong>
 
                     <span>
-                        {{ logistic.testing_records }}
+                        {{ logistic.train_samples }}
+                    </span>
+
+                </div>
+
+
+                <div class="model-info-box">
+
+                    <strong>
+                        Testing Samples
+                    </strong>
+
+                    <span>
+                        {{ logistic.test_samples }}
                     </span>
 
                 </div>
@@ -204,24 +286,18 @@
 
             </div>
 
-        </section>
+        </div>
 
 
         <!-- =================================================
-             SCALING COMPARISON
+             FEATURES
         ================================================== -->
 
-        <section class="card">
+        <div class="card">
 
-            <h2>Scaling Comparison</h2>
-
-            <p class="section-description">
-
-                Comparison of Logistic Regression performance
-                using unscaled data, StandardScaler and
-                MinMaxScaler.
-
-            </p>
+            <h2>
+                Features Used
+            </h2>
 
 
             <div class="table-wrapper">
@@ -232,33 +308,22 @@
 
                         <tr>
 
-                            <th>Scaling Method</th>
-
-                            <th>Training Accuracy</th>
-
-                            <th>Testing Accuracy</th>
+                            <th>
+                                Feature
+                            </th>
 
                         </tr>
 
                     </thead>
 
-
                     <tbody>
 
-                        {% for row in logistic.scaling_comparison %}
+                        {% for feature in logistic.features %}
 
                         <tr>
 
                             <td>
-                                {{ row.method }}
-                            </td>
-
-                            <td>
-                                {{ "%.4f"|format(row.training_accuracy) }}
-                            </td>
-
-                            <td>
-                                {{ "%.4f"|format(row.testing_accuracy) }}
+                                {{ feature }}
                             </td>
 
                         </tr>
@@ -271,85 +336,377 @@
 
             </div>
 
-        </section>
+        </div>
 
 
         <!-- =================================================
-             CHARTS
+             PERFORMANCE
         ================================================== -->
 
-        <section class="card">
+        <div class="card performance-card">
 
-            <h2>Logistic Regression Charts</h2>
-
-            <p class="section-description">
-
-                Visual analysis of model performance,
-                scaling methods and classification results.
-
-            </p>
+            <h2>
+                Model Performance
+            </h2>
 
 
-            <div class="logistic-chart-grid">
+            <div class="logistic-metrics">
 
 
-                <!-- Scaling Chart -->
-
-                <div class="logistic-chart-card">
+                <div class="metric-box">
 
                     <h3>
-                        Scaling Method Comparison
+                        Training Accuracy
                     </h3>
 
-                    <div class="logistic-chart-container">
+                    <span class="metric-value">
 
-                        <img
-                            src="{{ url_for('static', filename=logistic.scaling_chart) }}"
-                            alt="Logistic Regression Scaling Comparison"
-                        >
+                        {{ logistic.train_accuracy }}
 
-                    </div>
+                    </span>
 
                 </div>
 
 
-                <!-- Confusion Matrix -->
-
-                <div class="logistic-chart-card">
+                <div class="metric-box">
 
                     <h3>
-                        Confusion Matrix
+                        Testing Accuracy
                     </h3>
 
-                    <div class="logistic-chart-container">
+                    <span class="metric-value">
 
-                        <img
-                            src="{{ url_for('static', filename=logistic.confusion_chart) }}"
-                            alt="Logistic Regression Confusion Matrix"
-                        >
+                        {{ logistic.test_accuracy }}
 
-                    </div>
+                    </span>
+
+                </div>
+
+
+                <div class="metric-box">
+
+                    <h3>
+                        Precision
+                    </h3>
+
+                    <span class="metric-value">
+
+                        {{ logistic.precision }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="metric-box">
+
+                    <h3>
+                        Recall
+                    </h3>
+
+                    <span class="metric-value">
+
+                        {{ logistic.recall }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="metric-box">
+
+                    <h3>
+                        F1 Score
+                    </h3>
+
+                    <span class="metric-value">
+
+                        {{ logistic.f1 }}
+
+                    </span>
 
                 </div>
 
 
             </div>
 
-        </section>
+        </div>
 
 
-        {% else %}
+        <!-- =================================================
+             CONFUSION MATRIX
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Confusion Matrix
+            </h2>
 
 
-        <section class="card">
+            <div class="confusion-wrapper">
 
-            <p class="error">
+                <table class="confusion-table">
 
-                Logistic Regression results are not available.
+                    <tr>
 
-            </p>
+                        <th></th>
 
-        </section>
+                        <th>
+                            Predicted Not Placed
+                        </th>
+
+                        <th>
+                            Predicted Placed
+                        </th>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <th>
+                            Actual Not Placed
+                        </th>
+
+                        <td class="tn">
+
+                            {{ logistic.confusion_matrix[0][0] }}
+
+                            <small>
+                                True Negative
+                            </small>
+
+                        </td>
+
+
+                        <td class="fp">
+
+                            {{ logistic.confusion_matrix[0][1] }}
+
+                            <small>
+                                False Positive
+                            </small>
+
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <th>
+                            Actual Placed
+                        </th>
+
+                        <td class="fn">
+
+                            {{ logistic.confusion_matrix[1][0] }}
+
+                            <small>
+                                False Negative
+                            </small>
+
+                        </td>
+
+
+                        <td class="tp">
+
+                            {{ logistic.confusion_matrix[1][1] }}
+
+                            <small>
+                                True Positive
+                            </small>
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CONFUSION MATRIX CHART
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Confusion Matrix Chart
+            </h2>
+
+
+            <div class="logistic-chart-container">
+
+                <img
+                    src="{{ url_for(
+                        'static',
+                        filename='charts/' +
+                        logistic.confusion_chart
+                    ) }}"
+                    alt="Confusion Matrix">
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             COEFFICIENTS
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Feature Coefficients
+            </h2>
+
+
+            <div class="logistic-table-wrapper">
+
+                <table class="logistic-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Feature
+                            </th>
+
+                            <th>
+                                Coefficient
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for feature, coefficient
+                           in logistic.coefficients.items() %}
+
+                        <tr>
+
+                            <td>
+                                {{ feature }}
+                            </td>
+
+                            <td>
+                                {{ coefficient }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CLASSIFICATION REPORT
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Classification Report
+            </h2>
+
+
+            <div class="logistic-table-wrapper">
+
+                <table class="logistic-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Class
+                            </th>
+
+                            <th>
+                                Precision
+                            </th>
+
+                            <th>
+                                Recall
+                            </th>
+
+                            <th>
+                                F1 Score
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for class_name, values
+                           in logistic.classification_report.items() %}
+
+
+                            {% if values is mapping %}
+
+                            <tr>
+
+                                <td>
+                                    {{ class_name }}
+                                </td>
+
+                                <td>
+
+                                    {{ "%.4f"|format(
+                                        values["precision"]
+                                    ) }}
+
+                                </td>
+
+                                <td>
+
+                                    {{ "%.4f"|format(
+                                        values["recall"]
+                                    ) }}
+
+                                </td>
+
+                                <td>
+
+                                    {{ "%.4f"|format(
+                                        values["f1-score"]
+                                    ) }}
+
+                                </td>
+
+                            </tr>
+
+                            {% endif %}
+
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
 
 
         {% endif %}
@@ -358,6 +715,7 @@
     </main>
 
 </div>
+
 
 </body>
 

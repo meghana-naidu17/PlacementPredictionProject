@@ -16,7 +16,16 @@ from sklearn.preprocessing import (
 
 DATASET_PATH = r"C:\Users\Abhiii\Downloads\KL SEM-1\ml\PythonProject1\placement_predict_50k Dataset (3)(in).csv"
 
+# NEW DATASET AFTER MISSING VALUE HANDLING
+CLEANED_DATASET_PATH = r"C:\Users\Abhiii\Downloads\KL SEM-1\ml\PythonProject1\cleaned_placement_dataset.csv"
+
 TARGET = "PlacementStatus"
+
+# Options:
+# "row"    -> remove rows containing missing values
+# "column" -> remove columns containing missing values
+# "mean"   -> mean imputation
+# "median" -> median imputation
 
 MISSING_METHOD = "median"
 
@@ -40,6 +49,7 @@ def handle_missing_values(data, method="median"):
 
     df = data.copy()
 
+    # Count missing values before processing
     missing_before = int(
         df.isnull().sum().sum()
     )
@@ -85,6 +95,7 @@ def handle_missing_values(data, method="median"):
 
     elif method == "mean":
 
+        # Numerical columns
         numeric_columns = (
             df.select_dtypes(
                 include=np.number
@@ -114,6 +125,7 @@ def handle_missing_values(data, method="median"):
                     )
                 })
 
+        # Categorical columns
         categorical_columns = (
             df.select_dtypes(
                 exclude=np.number
@@ -151,6 +163,7 @@ def handle_missing_values(data, method="median"):
 
     elif method == "median":
 
+        # Numerical columns
         numeric_columns = (
             df.select_dtypes(
                 include=np.number
@@ -180,6 +193,7 @@ def handle_missing_values(data, method="median"):
                     )
                 })
 
+        # Categorical columns
         categorical_columns = (
             df.select_dtypes(
                 exclude=np.number
@@ -214,9 +228,11 @@ def handle_missing_values(data, method="median"):
     else:
 
         raise ValueError(
-            "Invalid missing value method"
+            "Invalid missing value method. "
+            "Use row, column, mean, or median."
         )
 
+    # Count missing values after processing
     missing_after = int(
         df.isnull().sum().sum()
     )
@@ -257,6 +273,31 @@ def handle_missing_values(data, method="median"):
         columns_deleted,
         values_imputed,
         missing_table
+    )
+
+
+# =========================================================
+# SAVE CLEANED DATASET
+# =========================================================
+
+def save_cleaned_dataset(df):
+
+    df.to_csv(
+        CLEANED_DATASET_PATH,
+        index=False
+    )
+
+    print("\n======================================")
+    print("CLEANED DATASET SAVED")
+    print("======================================")
+
+    print("File:", CLEANED_DATASET_PATH)
+    print("Rows:", df.shape[0])
+    print("Columns:", df.shape[1])
+
+    print(
+        "Missing values remaining:",
+        int(df.isnull().sum().sum())
     )
 
 
@@ -304,6 +345,7 @@ def detect_iqr_outliers(df, column):
         upper=upper_bound
     )
 
+    # Create clipped column
     df[column + "_clipped"] = clipped
 
     result = {
@@ -646,6 +688,7 @@ def scale_features(X_train, X_test):
     minmax_scaler = MinMaxScaler()
 
     X_train_standard = X_train.copy()
+
     X_test_standard = X_test.copy()
 
     X_train_minmax = X_train.copy()
@@ -693,6 +736,18 @@ def run_feature_engineering(
 
     original_data = load_dataset()
 
+    print("\n======================================")
+    print("ORIGINAL DATASET")
+    print("======================================")
+
+    print("Rows:", original_data.shape[0])
+    print("Columns:", original_data.shape[1])
+
+    print(
+        "Missing values:",
+        int(original_data.isnull().sum().sum())
+    )
+
     # -----------------------------------------------------
     # MISSING VALUES
     # -----------------------------------------------------
@@ -708,6 +763,14 @@ def run_feature_engineering(
     ) = handle_missing_values(
         original_data,
         missing_method
+    )
+
+    # -----------------------------------------------------
+    # SAVE CLEANED DATASET
+    # -----------------------------------------------------
+
+    save_cleaned_dataset(
+        cleaned_data
     )
 
     # -----------------------------------------------------
@@ -847,6 +910,7 @@ def run_feature_engineering(
 
                     "median":
                         "Median Imputation"
+
                 }.get(
                     missing_method
                 ),
@@ -946,8 +1010,18 @@ def run_feature_engineering(
         }
     }
 
+    # =====================================================
+    # RETURN
+    # =====================================================
+
     return {
 
+        # Cleaned dataset
+        # Missing values already handled
+        "cleaned_data":
+            cleaned_data,
+
+        # Encoded dataset
         "data":
             encoded_data,
 
@@ -987,21 +1061,41 @@ if __name__ == "__main__":
     print("======================================")
 
     print(
-        "Rows:",
+        "Original Rows:",
         result["preprocessing"]["n_rows"]
     )
 
     print(
-        "Columns:",
+        "Original Columns:",
         result["preprocessing"]["n_columns"]
     )
 
     print(
-        "Training:",
+        "Missing Values Before:",
+        result["preprocessing"]["missing_values"]["missing_before"]
+    )
+
+    print(
+        "Missing Values After:",
+        result["preprocessing"]["missing_values"]["missing_after"]
+    )
+
+    print(
+        "Values Imputed:",
+        len(
+            result["preprocessing"]["changes"]["values_imputed"]
+        )
+    )
+
+    print(
+        "Training Rows:",
         result["preprocessing"]["split"]["train_rows"]
     )
 
     print(
-        "Testing:",
+        "Testing Rows:",
         result["preprocessing"]["split"]["test_rows"]
     )
+
+    print("\nCleaned dataset:")
+    print(CLEANED_DATASET_PATH)

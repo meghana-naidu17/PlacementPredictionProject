@@ -1,6 +1,8 @@
 import os
+
 import numpy as np
 import pandas as pd
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -8,7 +10,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.linear_model import (
+    LinearRegression,
+    Ridge,
+    Lasso
+)
+
 from sklearn.metrics import (
     mean_squared_error,
     mean_absolute_error,
@@ -16,1051 +25,568 @@ from sklearn.metrics import (
 )
 
 
-# ============================================================
-# DATASET PATH
-# ============================================================
+# =========================================================
+# PATHS
+# =========================================================
 
-FILE_PATH = r"C:\Users\Abhiii\Downloads\KL SEM-1\ml\PythonProject1\placement_predict_50k Dataset (3)(in).csv"
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
+
+DATASET_PATH = os.path.join(
+    BASE_DIR,
+    "placement_predict_50k Dataset (3)(in).csv"
+)
+
+CHART_DIR = os.path.join(
+    BASE_DIR,
+    "static",
+    "charts"
+)
+
+os.makedirs(
+    CHART_DIR,
+    exist_ok=True
+)
 
 
-# ============================================================
-# HELPER
-# ============================================================
+# =========================================================
+# NUMERIC CLEANING
+# =========================================================
 
 def to_numeric_clean(series):
 
-    if pd.api.types.is_numeric_dtype(series):
-        return pd.to_numeric(series, errors="coerce")
-
     return pd.to_numeric(
-        series.astype(str)
+        series
+        .astype(str)
         .str.replace(",", "", regex=False)
-        .str.replace("₹", "", regex=False)
-        .str.replace("$", "", regex=False)
         .str.strip(),
         errors="coerce"
     )
 
 
-# ============================================================
-# STANDARDIZATION
-# ============================================================
+# =========================================================
+# CALCULATE METRICS
+# =========================================================
 
-def standardize(x):
+def calculate_metrics(y_true, predictions):
 
-    x = np.asarray(x, dtype=float)
+    mse = mean_squared_error(
+        y_true,
+        predictions
+    )
 
-    mean = x.mean()
-    std = x.std()
+    rmse = np.sqrt(mse)
 
-    if std == 0 or not np.isfinite(std):
-        std = 1.0
+    mae = mean_absolute_error(
+        y_true,
+        predictions
+    )
 
-    return (x - mean) / std, mean, std
+    r2 = r2_score(
+        y_true,
+        predictions
+    )
 
+    return {
 
-# ============================================================
-# BATCH GRADIENT DESCENT
-# ============================================================
+        "mse": round(
+            float(mse),
+            4
+        ),
 
-def batch_gradient_descent(
-    x,
-    y,
-    alpha=0.05,
-    epochs=6
-):
+        "rmse": round(
+            float(rmse),
+            4
+        ),
 
-    x = np.asarray(x, dtype=float)
-    y = np.asarray(y, dtype=float)
+        "mae": round(
+            float(mae),
+            4
+        ),
 
-    m = len(x)
-
-    theta0 = 0.0
-    theta1 = 0.0
-
-    mse_history = []
-
-    for epoch in range(1, epochs + 1):
-
-        # ----------------------------------------------------
-        # Prediction
-        # ----------------------------------------------------
-
-        y_hat = theta0 + theta1 * x
-
-        # ----------------------------------------------------
-        # Error
-        # ----------------------------------------------------
-
-        error = y_hat - y
-
-        # ----------------------------------------------------
-        # Gradients
-        # ----------------------------------------------------
-
-        grad_theta0 = (2.0 / m) * np.sum(error)
-
-        grad_theta1 = (2.0 / m) * np.sum(error * x)
-
-        # ----------------------------------------------------
-        # Update parameters
-        # ----------------------------------------------------
-
-        theta0 = theta0 - alpha * grad_theta0
-
-        theta1 = theta1 - alpha * grad_theta1
-
-        # ----------------------------------------------------
-        # MSE after update
-        # ----------------------------------------------------
-
-        updated_y_hat = theta0 + theta1 * x
-
-        mse = np.mean(
-            (updated_y_hat - y) ** 2
+        "r2": round(
+            float(r2),
+            4
         )
-
-        mse_history.append({
-            "epoch": epoch,
-            "theta0": float(theta0),
-            "theta1": float(theta1),
-            "mse": float(mse)
-        })
-
-    return theta0, theta1, mse_history
-
-
-# ============================================================
-# CHART DIRECTORY
-# ============================================================
-
-def charts_directory():
-
-    base_dir = os.path.dirname(
-        os.path.abspath(__file__)
-    )
-
-    chart_dir = os.path.join(
-        base_dir,
-        "static",
-        "charts"
-    )
-
-    os.makedirs(
-        chart_dir,
-        exist_ok=True
-    )
-
-    return chart_dir
-
-
-# ============================================================
-# SAVE CHART
-# ============================================================
-
-def save_figure(fig, filename):
-
-    chart_dir = charts_directory()
-
-    path = os.path.join(
-        chart_dir,
-        filename
-    )
-
-    fig.tight_layout()
-
-    fig.savefig(
-        path,
-        format="png",
-        dpi=150,
-        bbox_inches="tight"
-    )
-
-    plt.close(fig)
-
-    return filename
-
-
-# ============================================================
-# DELETE OLD REGRESSION CHARTS
-# ============================================================
-
-def clear_old_charts():
-
-    chart_dir = charts_directory()
-
-    chart_names = [
-
-        "gradient_descent_mse.png",
-
-        "gradient_descent_vs_sklearn.png",
-
-        "scaling_comparison.png"
-
-    ]
-
-    for filename in chart_names:
-
-        path = os.path.join(
-            chart_dir,
-            filename
-        )
-
-        if os.path.exists(path):
-
-            try:
-
-                os.remove(path)
-
-            except OSError:
-
-                pass
-
-
-# ============================================================
-# GENERATE CHARTS
-# ============================================================
-
-def generate_regression_charts(model_data):
-
-    clear_old_charts()
-
-    charts = []
-
-    if not model_data:
-        return charts
-
-    if model_data.get("error"):
-        return charts
-
-    # ========================================================
-    # DATA
-    # ========================================================
-
-    x_train = np.asarray(
-        model_data["x_train"],
-        dtype=float
-    )
-
-    y_train = np.asarray(
-        model_data["y_train"],
-        dtype=float
-    )
-
-    x_val = np.asarray(
-        model_data["x_val"],
-        dtype=float
-    )
-
-    y_val = np.asarray(
-        model_data["y_val"],
-        dtype=float
-    )
-
-    gd_predictions = np.asarray(
-        model_data["gd_predictions"],
-        dtype=float
-    )
-
-    sk_predictions = np.asarray(
-        model_data["sk_predictions"],
-        dtype=float
-    )
-
-    mse_history = model_data["mse_history"]
-
-    # ========================================================
-    # CHART 1
-    # GRADIENT DESCENT MSE
-    # ========================================================
-
-    epochs = [
-        item["epoch"]
-        for item in mse_history
-    ]
-
-    mse_values = [
-        item["mse"]
-        for item in mse_history
-    ]
-
-    fig, ax = plt.subplots(
-        figsize=(8.5, 5.2)
-    )
-
-    ax.plot(
-        epochs,
-        mse_values,
-        marker="o",
-        linewidth=2
-    )
-
-    for epoch, mse in zip(
-        epochs,
-        mse_values
-    ):
-
-        ax.annotate(
-            f"{mse:.2f}",
-            (epoch, mse),
-            textcoords="offset points",
-            xytext=(0, 8),
-            ha="center",
-            fontsize=9
-        )
-
-    ax.set_title(
-        "Gradient Descent MSE - 6 Iterations"
-    )
-
-    ax.set_xlabel(
-        "Iteration"
-    )
-
-    ax.set_ylabel(
-        "Mean Squared Error"
-    )
-
-    ax.set_xticks(
-        epochs
-    )
-
-    ax.grid(
-        True,
-        alpha=0.25
-    )
-
-    filename = "gradient_descent_mse.png"
-
-    save_figure(
-        fig,
-        filename
-    )
-
-    charts.append({
-        "title": "Gradient Descent MSE",
-        "filename": filename
-    })
-
-    # ========================================================
-    # CHART 2
-    # GRADIENT DESCENT VS SCIKIT-LEARN
-    # ========================================================
-
-    sort_index = np.argsort(
-        x_val
-    )
-
-    sorted_x = x_val[
-        sort_index
-    ]
-
-    sorted_actual = y_val[
-        sort_index
-    ]
-
-    sorted_gd = gd_predictions[
-        sort_index
-    ]
-
-    sorted_sk = sk_predictions[
-        sort_index
-    ]
-
-    fig, ax = plt.subplots(
-        figsize=(8.5, 5.2)
-    )
-
-    ax.scatter(
-        sorted_x,
-        sorted_actual,
-        s=18,
-        alpha=0.35,
-        label="Actual Salary"
-    )
-
-    ax.plot(
-        sorted_x,
-        sorted_gd,
-        linewidth=2,
-        label="Gradient Descent"
-    )
-
-    ax.plot(
-        sorted_x,
-        sorted_sk,
-        linewidth=2,
-        linestyle="--",
-        label="Scikit-learn"
-    )
-
-    ax.set_title(
-        "Gradient Descent vs Scikit-learn"
-    )
-
-    ax.set_xlabel(
-        "CGPA"
-    )
-
-    ax.set_ylabel(
-        "Salary Package"
-    )
-
-    ax.legend()
-
-    ax.grid(
-        True,
-        alpha=0.25
-    )
-
-    filename = "gradient_descent_vs_sklearn.png"
-
-    save_figure(
-        fig,
-        filename
-    )
-
-    charts.append({
-        "title":
-            "Gradient Descent vs Scikit-learn",
-
-        "filename":
-            filename
-    })
-
-    # ========================================================
-    # CHART 3
-    # SCALING COMPARISON
-    # ========================================================
-
-    x_mean = float(
-        model_data["x_mean"]
-    )
-
-    x_std = float(
-        model_data["x_std"]
-    )
-
-    gd_theta0 = float(
-        model_data["gd_theta0"]
-    )
-
-    gd_theta1 = float(
-        model_data["gd_theta1"]
-    )
-
-    # --------------------------------------------------------
-    # Original CGPA scale
-    # --------------------------------------------------------
-
-    x_original_line = np.linspace(
-        float(x_train.min()),
-        float(x_train.max()),
-        200
-    )
-
-    x_scaled_line = (
-        x_original_line - x_mean
-    ) / x_std
-
-    y_scaled_prediction = (
-        gd_theta0
-        + gd_theta1 * x_scaled_line
-    )
-
-    # --------------------------------------------------------
-    # Convert coefficients back
-    # --------------------------------------------------------
-
-    original_slope = (
-        gd_theta1 / x_std
-    )
-
-    original_intercept = (
-        gd_theta0
-        -
-        (
-            gd_theta1
-            * x_mean
-            / x_std
-        )
-    )
-
-    y_original_prediction = (
-        original_intercept
-        +
-        original_slope
-        * x_original_line
-    )
-
-    fig, ax = plt.subplots(
-        figsize=(8.5, 5.2)
-    )
-
-    ax.plot(
-        x_original_line,
-        y_original_prediction,
-        linewidth=2,
-        label="Original CGPA Scale"
-    )
-
-    ax.plot(
-        x_original_line,
-        y_scaled_prediction,
-        linewidth=2,
-        linestyle="--",
-        label="Standardized CGPA Scale"
-    )
-
-    ax.scatter(
-        x_train,
-        y_train,
-        s=15,
-        alpha=0.25,
-        label="Training Data"
-    )
-
-    ax.set_title(
-        "Linear Regression - Scaling Comparison"
-    )
-
-    ax.set_xlabel(
-        "CGPA"
-    )
-
-    ax.set_ylabel(
-        "Salary Package"
-    )
-
-    ax.legend()
-
-    ax.grid(
-        True,
-        alpha=0.25
-    )
-
-    filename = "scaling_comparison.png"
-
-    save_figure(
-        fig,
-        filename
-    )
-
-    charts.append({
-        "title":
-            "Scaling Comparison",
-
-        "filename":
-            filename
-    })
-
-    return charts
-
-
-# ============================================================
-# MAIN LINEAR REGRESSION FUNCTION
-# ============================================================
-
-def run_linear_regression():
-
-    df = pd.read_csv(
-        FILE_PATH
-    )
-
-    MODEL_FEATURE = "CGPA"
-
-    MODEL_TARGET = "Salary Package"
-
-    # ========================================================
-    # CHECK COLUMNS
-    # ========================================================
-
-    if (
-        MODEL_FEATURE not in df.columns
-        or MODEL_TARGET not in df.columns
-    ):
-
-        return {
-            "error":
-                "CGPA or Salary Package column was not found."
-        }
-
-    # ========================================================
-    # SELECT DATA
-    # ========================================================
-
-    model_df = df[
-        [
-            MODEL_FEATURE,
-            MODEL_TARGET
-        ]
-    ].copy()
-
-    model_df[
-        MODEL_FEATURE
-    ] = to_numeric_clean(
-        model_df[
-            MODEL_FEATURE
-        ]
-    )
-
-    model_df[
-        MODEL_TARGET
-    ] = to_numeric_clean(
-        model_df[
-            MODEL_TARGET
-        ]
-    )
-
-    model_df = model_df.dropna()
-
-    # ========================================================
-    # CHECK DATA
-    # ========================================================
-
-    if len(model_df) < 10:
-
-        return {
-            "error":
-                "Not enough valid CGPA/Salary Package rows."
-        }
-
-    # ========================================================
-    # X AND Y
-    # ========================================================
-
-    x = model_df[
-        MODEL_FEATURE
-    ].to_numpy(
-        dtype=float
-    )
-
-    y = model_df[
-        MODEL_TARGET
-    ].to_numpy(
-        dtype=float
-    )
-
-    # ========================================================
-    # TRAIN / VALIDATION SPLIT
-    # ========================================================
-
-    (
-        x_train,
-        x_val,
-        y_train,
-        y_val
-    ) = train_test_split(
-        x,
-        y,
-        test_size=0.20,
-        random_state=42
-    )
-
-    # ========================================================
-    # STANDARDIZE CGPA
-    # ========================================================
-
-    (
-        x_train_std,
-        x_mean,
-        x_std
-    ) = standardize(
-        x_train
-    )
-
-    x_val_std = (
-        x_val - x_mean
-    ) / x_std
-
-    # ========================================================
-    # BATCH GRADIENT DESCENT
-    # ========================================================
-
-    gd_alpha = 0.05
-
-    gd_epochs = 6
-
-    (
-        gd_theta0,
-        gd_theta1,
-        mse_history
-    ) = batch_gradient_descent(
-        x_train_std,
-        y_train,
-        alpha=gd_alpha,
-        epochs=gd_epochs
-    )
-
-    # ========================================================
-    # GRADIENT DESCENT PREDICTIONS
-    # ========================================================
-
-    y_val_gd_pred = (
-        gd_theta0
-        + gd_theta1 * x_val_std
-    )
-
-    # ========================================================
-    # GRADIENT DESCENT METRICS
-    # ========================================================
-
-    gd_mse = mean_squared_error(
-        y_val,
-        y_val_gd_pred
-    )
-
-    gd_rmse = np.sqrt(
-        gd_mse
-    )
-
-    gd_mae = mean_absolute_error(
-        y_val,
-        y_val_gd_pred
-    )
-
-    gd_r2 = r2_score(
-        y_val,
-        y_val_gd_pred
-    )
-
-    # ========================================================
-    # CONVERT PARAMETERS TO ORIGINAL CGPA
-    # ========================================================
-
-    gd_original_slope = (
-        gd_theta1 / x_std
-    )
-
-    gd_original_intercept = (
-        gd_theta0
-        -
-        (
-            gd_theta1
-            * x_mean
-            / x_std
-        )
-    )
-
-    # ========================================================
-    # SCIKIT-LEARN
-    # ========================================================
-
-    sk_model = LinearRegression()
-
-    sk_model.fit(
-        x_train.reshape(-1, 1),
-        y_train
-    )
-
-    y_val_sk_pred = sk_model.predict(
-        x_val.reshape(-1, 1)
-    )
-
-    # ========================================================
-    # SCIKIT-LEARN METRICS
-    # ========================================================
-
-    sk_mse = mean_squared_error(
-        y_val,
-        y_val_sk_pred
-    )
-
-    sk_rmse = np.sqrt(
-        sk_mse
-    )
-
-    sk_mae = mean_absolute_error(
-        y_val,
-        y_val_sk_pred
-    )
-
-    sk_r2 = r2_score(
-        y_val,
-        y_val_sk_pred
-    )
-
-    # ========================================================
-    # INTERNAL CHART DATA
-    # ========================================================
-
-    chart_data = {
-
-        "x_train":
-            x_train.tolist(),
-
-        "y_train":
-            y_train.tolist(),
-
-        "x_val":
-            x_val.tolist(),
-
-        "y_val":
-            y_val.tolist(),
-
-        "gd_predictions":
-            y_val_gd_pred.tolist(),
-
-        "sk_predictions":
-            y_val_sk_pred.tolist(),
-
-        "x_mean":
-            float(x_mean),
-
-        "x_std":
-            float(x_std),
-
-        "gd_theta0":
-            float(gd_theta0),
-
-        "gd_theta1":
-            float(gd_theta1),
-
-        "mse_history":
-            mse_history
     }
 
-    # ========================================================
-    # GENERATE CHARTS
-    # ========================================================
 
-    charts = generate_regression_charts(
-        chart_data
-    )
+# =========================================================
+# MAIN
+# =========================================================
 
-    # ========================================================
-    # FINAL RESULT
-    # ========================================================
+def run_linear_regression(
+    regularization="none"
+):
 
-    result = {
+    try:
 
-        "feature":
-            MODEL_FEATURE,
+        # =================================================
+        # LOAD DATA
+        # =================================================
 
-        "target":
-            MODEL_TARGET,
+        if not os.path.exists(
+            DATASET_PATH
+        ):
 
-        "train_rows":
-            int(len(x_train)),
+            return {
+                "error":
+                f"Dataset not found: {DATASET_PATH}"
+            }
 
-        "validation_rows":
-            int(len(x_val)),
+        df = pd.read_csv(
+            DATASET_PATH
+        )
 
-        "alpha":
-            gd_alpha,
+        # =================================================
+        # COLUMNS
+        # =================================================
 
-        "epochs":
-            gd_epochs,
+        feature = "CGPA"
 
-        "standardization": {
+        target = "Salary Package"
 
-            "mean":
+        if feature not in df.columns:
+
+            return {
+                "error":
+                f"Column '{feature}' not found."
+            }
+
+        if target not in df.columns:
+
+            return {
+                "error":
+                f"Column '{target}' not found."
+            }
+
+        # =================================================
+        # CLEAN DATA
+        # =================================================
+
+        df[feature] = to_numeric_clean(
+            df[feature]
+        )
+
+        df[target] = to_numeric_clean(
+            df[target]
+        )
+
+        df = df[
+            [feature, target]
+        ].dropna()
+
+        if len(df) < 10:
+
+            return {
+                "error":
+                "Not enough valid data."
+            }
+
+        # =================================================
+        # X / Y
+        # =================================================
+
+        X = df[
+            [feature]
+        ].values
+
+        y = df[
+            target
+        ].values
+
+        # =================================================
+        # TRAIN TEST SPLIT
+        # =================================================
+
+        X_train, X_test, y_train, y_test = train_test_split(
+
+            X,
+            y,
+
+            test_size=0.20,
+
+            random_state=42
+
+        )
+
+        # =================================================
+        # STANDARD SCALING
+        # =================================================
+
+        scaler = StandardScaler()
+
+        X_train_scaled = scaler.fit_transform(
+            X_train
+        )
+
+        X_test_scaled = scaler.transform(
+            X_test
+        )
+
+        # =================================================
+        # REGULARIZATION SELECTION
+        # =================================================
+
+        regularization = (
+            regularization
+            .lower()
+            .strip()
+        )
+
+        if regularization == "none":
+
+            model = LinearRegression()
+
+            model_name = (
+                "Linear Regression - "
+                "Without Regularization"
+            )
+
+        elif regularization == "ridge":
+
+            model = Ridge(
+                alpha=1.0
+            )
+
+            model_name = (
+                "Ridge Regression - "
+                "L2 Regularization"
+            )
+
+        elif regularization == "lasso":
+
+            model = Lasso(
+                alpha=0.01,
+                max_iter=10000
+            )
+
+            model_name = (
+                "Lasso Regression - "
+                "L1 Regularization"
+            )
+
+        else:
+
+            return {
+                "error":
+                "Invalid regularization option."
+            }
+
+        # =================================================
+        # TRAIN MODEL
+        # =================================================
+
+        model.fit(
+            X_train_scaled,
+            y_train
+        )
+
+        # =================================================
+        # PREDICTIONS
+        # =================================================
+
+        train_predictions = model.predict(
+            X_train_scaled
+        )
+
+        test_predictions = model.predict(
+            X_test_scaled
+        )
+
+        # =================================================
+        # MODEL METRICS
+        # =================================================
+
+        train_metrics = calculate_metrics(
+            y_train,
+            train_predictions
+        )
+
+        test_metrics = calculate_metrics(
+            y_test,
+            test_predictions
+        )
+
+        # =================================================
+        # ACTUAL VS PREDICTED CHART
+        # =================================================
+
+        comparison_chart = (
+            f"linear_{regularization}_"
+            f"actual_vs_predicted.png"
+        )
+
+        comparison_path = os.path.join(
+            CHART_DIR,
+            comparison_chart
+        )
+
+        plt.figure(
+            figsize=(8, 5)
+        )
+
+        plt.scatter(
+            y_test,
+            test_predictions,
+            alpha=0.6
+        )
+
+        min_value = min(
+            y_test.min(),
+            test_predictions.min()
+        )
+
+        max_value = max(
+            y_test.max(),
+            test_predictions.max()
+        )
+
+        plt.plot(
+            [min_value, max_value],
+            [min_value, max_value],
+            linestyle="--"
+        )
+
+        plt.xlabel(
+            "Actual Salary Package"
+        )
+
+        plt.ylabel(
+            "Predicted Salary Package"
+        )
+
+        plt.title(
+            model_name
+        )
+
+        plt.grid(
+            True
+        )
+
+        plt.tight_layout()
+
+        plt.savefig(
+            comparison_path
+        )
+
+        plt.close()
+
+        # =================================================
+        # GRADIENT DESCENT
+        # =================================================
+
+        X_gd = X_train_scaled
+
+        X_gd_bias = np.c_[
+            np.ones(
+                X_gd.shape[0]
+            ),
+            X_gd
+        ]
+
+        weights = np.zeros(
+            X_gd_bias.shape[1]
+        )
+
+        learning_rate = 0.05
+
+        epochs = 50
+
+        mse_history = []
+
+        # -------------------------------------------------
+        # GRADIENT DESCENT TRAINING
+        # -------------------------------------------------
+
+        for epoch in range(
+            epochs
+        ):
+
+            predictions = (
+                X_gd_bias @ weights
+            )
+
+            error = (
+                predictions - y_train
+            )
+
+            mse = np.mean(
+                error ** 2
+            )
+
+            mse_history.append(
+                float(mse)
+            )
+
+            gradient = (
+
+                2 / len(y_train)
+
+            ) * (
+
+                X_gd_bias.T @ error
+
+            )
+
+            weights -= (
+                learning_rate * gradient
+            )
+
+        # =================================================
+        # GRADIENT DESCENT FINAL PREDICTIONS
+        # =================================================
+
+        gd_train_predictions = (
+            X_gd_bias @ weights
+        )
+
+        # =================================================
+        # GRADIENT DESCENT METRICS
+        # =================================================
+
+        gd_metrics = calculate_metrics(
+            y_train,
+            gd_train_predictions
+        )
+
+        # =================================================
+        # GRADIENT DESCENT CHART
+        # =================================================
+
+        gd_mse_chart = (
+            f"linear_{regularization}_"
+            f"gradient_descent.png"
+        )
+
+        gd_chart_path = os.path.join(
+            CHART_DIR,
+            gd_mse_chart
+        )
+
+        plt.figure(
+            figsize=(8, 5)
+        )
+
+        plt.plot(
+            range(
+                1,
+                epochs + 1
+            ),
+            mse_history,
+            marker="o"
+        )
+
+        plt.xlabel(
+            "Epoch"
+        )
+
+        plt.ylabel(
+            "Mean Squared Error"
+        )
+
+        plt.title(
+            f"Gradient Descent - {model_name}"
+        )
+
+        plt.grid(
+            True
+        )
+
+        plt.tight_layout()
+
+        plt.savefig(
+            gd_chart_path
+        )
+
+        plt.close()
+
+        # =================================================
+        # RETURN
+        # =================================================
+
+        return {
+
+            "success": True,
+
+            "model_name":
+                model_name,
+
+            "regularization":
+                regularization,
+
+            "feature":
+                feature,
+
+            "target":
+                target,
+
+            "samples":
+                len(df),
+
+            "train_samples":
+                len(X_train),
+
+            "test_samples":
+                len(X_test),
+
+            # ---------------------------------------------
+            # IMPORTANT:
+            # HTML EXPECTS train_metrics/test_metrics
+            # ---------------------------------------------
+
+            "train_metrics":
+                train_metrics,
+
+            "test_metrics":
+                test_metrics,
+
+            # ---------------------------------------------
+            # REGRESSION PARAMETERS
+            # ---------------------------------------------
+
+            "coefficient":
                 round(
-                    float(x_mean),
+                    float(
+                        model.coef_[0]
+                    ),
                     6
                 ),
-
-            "std":
-                round(
-                    float(x_std),
-                    6
-                )
-        },
-
-        "gradient_descent": {
-
-            "theta0":
-                round(
-                    float(gd_theta0),
-                    6
-                ),
-
-            "theta1":
-                round(
-                    float(gd_theta1),
-                    6
-                ),
-
-            "original_intercept":
-                round(
-                    float(gd_original_intercept),
-                    6
-                ),
-
-            "original_slope":
-                round(
-                    float(gd_original_slope),
-                    6
-                ),
-
-            "mse":
-                round(
-                    float(gd_mse),
-                    6
-                ),
-
-            "rmse":
-                round(
-                    float(gd_rmse),
-                    6
-                ),
-
-            "mae":
-                round(
-                    float(gd_mae),
-                    6
-                ),
-
-            "r2":
-                round(
-                    float(gd_r2),
-                    6
-                )
-        },
-
-        "sklearn": {
 
             "intercept":
                 round(
-                    float(sk_model.intercept_),
-                    6
-                ),
-
-            "slope":
-                round(
-                    float(sk_model.coef_[0]),
-                    6
-                ),
-
-            "mse":
-                round(
-                    float(sk_mse),
-                    6
-                ),
-
-            "rmse":
-                round(
-                    float(sk_rmse),
-                    6
-                ),
-
-            "mae":
-                round(
-                    float(sk_mae),
-                    6
-                ),
-
-            "r2":
-                round(
-                    float(sk_r2),
-                    6
-                )
-        },
-
-        "mse_history": [
-
-            {
-                "epoch":
-                    item["epoch"],
-
-                "theta0":
-                    round(
-                        item["theta0"],
-                        6
+                    float(
+                        model.intercept_
                     ),
+                    6
+                ),
 
-                "theta1":
-                    round(
-                        item["theta1"],
-                        6
-                    ),
+            # ---------------------------------------------
+            # GRADIENT DESCENT
+            # ---------------------------------------------
 
-                "mse":
-                    round(
-                        item["mse"],
-                        6
-                    )
-            }
+            "gd_metrics":
+                gd_metrics,
 
-            for item in mse_history
-        ],
+            "mse_history":
+                mse_history,
 
-        "charts":
-            charts,
+            # ---------------------------------------------
+            # CHART NAMES
+            # ---------------------------------------------
 
-        "chart_version":
-            str(
-                int(
-                    pd.Timestamp.now().timestamp()
-                )
-            )
-    }
+            "comparison_chart":
+                comparison_chart,
 
-    return result
+            "gd_mse_chart":
+                gd_mse_chart
 
+        }
 
-# ============================================================
-# TEST
-# ============================================================
+    except Exception as e:
 
-if __name__ == "__main__":
-
-    result = run_linear_regression()
-
-    print("=" * 80)
-
-    print("LINEAR REGRESSION")
-
-    print("=" * 80)
-
-    if "error" in result:
-
-        print(
-            "Error:",
-            result["error"]
-        )
-
-    else:
-
-        print(
-            "Feature:",
-            result["feature"]
-        )
-
-        print(
-            "Target:",
-            result["target"]
-        )
-
-        print(
-            "Training rows:",
-            result["train_rows"]
-        )
-
-        print(
-            "Validation rows:",
-            result["validation_rows"]
-        )
-
-        print("\nGradient Descent:")
-
-        print(
-            result["gradient_descent"]
-        )
-
-        print("\nScikit-learn:")
-
-        print(
-            result["sklearn"]
-        )
-
-        print("\nCharts:")
-
-        for chart in result["charts"]:
-
-            print(
-                "-",
-                chart["filename"]
-            )
-
-    print("=" * 80)
+        return {
+            "error":
+            str(e)
+        }

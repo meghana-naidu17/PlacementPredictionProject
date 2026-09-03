@@ -1,23 +1,36 @@
 import os
 
+import numpy as np
 import pandas as pd
 
 import matplotlib
+
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    classification_report
+)
 
 
 # =========================================================
 # PATHS
 # =========================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
 
 DATASET_PATH = os.path.join(
     BASE_DIR,
@@ -30,603 +43,523 @@ CHART_DIR = os.path.join(
     "charts"
 )
 
-os.makedirs(CHART_DIR, exist_ok=True)
+os.makedirs(
+    CHART_DIR,
+    exist_ok=True
+)
 
 
 # =========================================================
-# LOAD DATA
+# TARGET CONVERSION
 # =========================================================
 
-def load_data():
+def convert_target(series):
 
-    data = pd.read_csv(DATASET_PATH)
+    if series.dtype == object:
 
-    features = [
-        "CGPA",
-        "AptitudeTestScore",
-        "CodingTestScore",
-        "MockInterviewScore"
-    ]
+        mapping = {
 
-    X = data[features].copy()
+            "placed": 1,
+            "not placed": 0,
 
-    y = data["PlacementStatus"].copy()
+            "yes": 1,
+            "no": 0,
 
-    # -----------------------------------------------------
-    # Convert target to 0/1
-    # -----------------------------------------------------
+            "true": 1,
+            "false": 0,
 
-    if y.dtype == "object":
+            "1": 1,
+            "0": 0
+        }
 
-        y = (
-            y.astype(str)
+        return (
+            series
+            .astype(str)
             .str.strip()
             .str.lower()
-            .map({
-                "placed": 1,
-                "not placed": 0,
-                "yes": 1,
-                "no": 0,
-                "true": 1,
-                "false": 0,
-                "1": 1,
-                "0": 0
-            })
+            .map(mapping)
         )
 
-    else:
-
-        y = pd.to_numeric(
-            y,
-            errors="coerce"
-        )
-
-    # -----------------------------------------------------
-    # Remove missing values
-    # -----------------------------------------------------
-
-    combined = pd.concat(
-        [X, y.rename("PlacementStatus")],
-        axis=1
+    return pd.to_numeric(
+        series,
+        errors="coerce"
     )
 
-    combined = combined.dropna()
-
-    X = combined[features]
-
-    y = combined["PlacementStatus"].astype(int)
-
-    return X, y
-
 
 # =========================================================
-# TRAIN MODEL
+# MAIN
 # =========================================================
 
-def train_model(
-    X_train,
-    X_test,
-    y_train,
-    y_test
+def run_logistic_regression(
+    regularization="none"
 ):
 
-    model = LogisticRegression(
-        max_iter=2000,
-        random_state=42
-    )
+    try:
 
-    # Train
-    model.fit(
-        X_train,
-        y_train
-    )
+        # =================================================
+        # LOAD DATA
+        # =================================================
 
-    # Training predictions
-    train_predictions = model.predict(
-        X_train
-    )
+        if not os.path.exists(
+            DATASET_PATH
+        ):
 
-    # Testing predictions
-    test_predictions = model.predict(
-        X_test
-    )
+            return {
+                "error":
+                f"Dataset not found: {DATASET_PATH}"
+            }
 
-    # Training accuracy
-    train_accuracy = accuracy_score(
-        y_train,
-        train_predictions
-    )
+        df = pd.read_csv(
+            DATASET_PATH
+        )
 
-    # Testing accuracy
-    test_accuracy = accuracy_score(
-        y_test,
-        test_predictions
-    )
+        # =================================================
+        # FEATURES
+        # =================================================
 
-    return (
-        model,
-        train_accuracy,
-        test_accuracy,
-        test_predictions
-    )
+        features = [
 
+            "CGPA",
 
-# =========================================================
-# MAIN LOGISTIC REGRESSION
-# =========================================================
+            "AptitudeTestScore",
 
-def run_logistic_regression():
+            "CodingTestScore",
 
-    # -----------------------------------------------------
-    # Load dataset
-    # -----------------------------------------------------
+            "MockInterviewScore"
 
-    X, y = load_data()
-
-    # -----------------------------------------------------
-    # Split dataset
-    # -----------------------------------------------------
-
-    X_train, X_test, y_train, y_test = train_test_split(
-
-        X,
-        y,
-
-        test_size=0.20,
-
-        stratify=y,
-
-        random_state=42
-    )
-
-
-    # =====================================================
-    # UNSCALED LOGISTIC REGRESSION
-    # =====================================================
-
-    (
-        unscaled_model,
-        unscaled_train,
-        unscaled_test,
-        unscaled_predictions
-    ) = train_model(
-
-        X_train,
-        X_test,
-        y_train,
-        y_test
-    )
-
-
-    # =====================================================
-    # STANDARD SCALER
-    # =====================================================
-
-    standard_scaler = StandardScaler()
-
-    X_train_std = standard_scaler.fit_transform(
-        X_train
-    )
-
-    X_test_std = standard_scaler.transform(
-        X_test
-    )
-
-    (
-        standard_model,
-        standard_train,
-        standard_test,
-        standard_predictions
-    ) = train_model(
-
-        X_train_std,
-        X_test_std,
-        y_train,
-        y_test
-    )
-
-
-    # =====================================================
-    # MIN-MAX SCALER
-    # =====================================================
-
-    minmax_scaler = MinMaxScaler()
-
-    X_train_mm = minmax_scaler.fit_transform(
-        X_train
-    )
-
-    X_test_mm = minmax_scaler.transform(
-        X_test
-    )
-
-    (
-        minmax_model,
-        minmax_train,
-        minmax_test,
-        minmax_predictions
-    ) = train_model(
-
-        X_train_mm,
-        X_test_mm,
-        y_train,
-        y_test
-    )
-
-
-    # =====================================================
-    # CHART 1
-    # SCALING COMPARISON
-    # =====================================================
-
-    methods = [
-        "Unscaled",
-        "StandardScaler",
-        "MinMaxScaler"
-    ]
-
-    train_scores = [
-        unscaled_train,
-        standard_train,
-        minmax_train
-    ]
-
-    test_scores = [
-        unscaled_test,
-        standard_test,
-        minmax_test
-    ]
-
-    plt.figure(
-        figsize=(10, 6)
-    )
-
-    x = range(
-        len(methods)
-    )
-
-    width = 0.35
-
-    # Training accuracy bars
-    plt.bar(
-        [i - width / 2 for i in x],
-        train_scores,
-        width=width,
-        label="Training Accuracy"
-    )
-
-    # Testing accuracy bars
-    plt.bar(
-        [i + width / 2 for i in x],
-        test_scores,
-        width=width,
-        label="Testing Accuracy"
-    )
-
-    plt.xticks(
-        list(x),
-        methods
-    )
-
-    plt.ylim(
-        0,
-        1.05
-    )
-
-    plt.ylabel(
-        "Accuracy"
-    )
-
-    plt.xlabel(
-        "Scaling Method"
-    )
-
-    plt.title(
-        "Logistic Regression Scaling Comparison"
-    )
-
-    plt.legend()
-
-    plt.tight_layout()
-
-    scaling_chart = os.path.join(
-        CHART_DIR,
-        "logistic_scaling_comparison.png"
-    )
-
-    plt.savefig(
-        scaling_chart,
-        dpi=150,
-        bbox_inches="tight"
-    )
-
-    plt.close()
-
-
-    # =====================================================
-    # CHART 2
-    # CONFUSION MATRIX
-    # =====================================================
-
-    cm = confusion_matrix(
-        y_test,
-        standard_predictions
-    )
-
-    plt.figure(
-        figsize=(7, 6)
-    )
-
-    # Display confusion matrix
-    plt.imshow(
-        cm
-    )
-
-    # -----------------------------------------------------
-    # TITLE
-    # -----------------------------------------------------
-
-    plt.title(
-        "Logistic Regression Confusion Matrix"
-    )
-
-    # -----------------------------------------------------
-    # AXIS LABELS
-    # -----------------------------------------------------
-
-    plt.xlabel(
-        "Predicted"
-    )
-
-    plt.ylabel(
-        "Actual"
-    )
-
-    # -----------------------------------------------------
-    # X AXIS
-    # -----------------------------------------------------
-
-    plt.xticks(
-        [0, 1],
-        [
-            "Not Placed",
-            "Placed"
         ]
-    )
 
-    # -----------------------------------------------------
-    # Y AXIS
-    # -----------------------------------------------------
+        target = "PlacementStatus"
 
-    plt.yticks(
-        [0, 1],
-        [
-            "Not Placed",
-            "Placed"
+        # =================================================
+        # CHECK COLUMNS
+        # =================================================
+
+        missing_columns = [
+
+            column
+
+            for column in
+            features + [target]
+
+            if column not in df.columns
+
         ]
-    )
 
-    # -----------------------------------------------------
-    # CONFUSION MATRIX VALUES
-    #
-    # White text is used for darker cells.
-    # Black text is used for lighter cells.
-    # -----------------------------------------------------
+        if missing_columns:
 
-    max_value = cm.max()
-
-    for i in range(2):
-
-        for j in range(2):
-
-            # Decide text colour based on value
-            if cm[i, j] < max_value * 0.7:
-
-                text_color = "white"
-
-            else:
-
-                text_color = "black"
-
-            plt.text(
-                j,
-                i,
-                str(cm[i, j]),
-                ha="center",
-                va="center",
-                color=text_color,
-                fontsize=12,
-                fontweight="bold"
-            )
-
-    # -----------------------------------------------------
-    # SAVE CONFUSION MATRIX
-    # -----------------------------------------------------
-
-    plt.tight_layout()
-
-    confusion_chart = os.path.join(
-        CHART_DIR,
-        "logistic_confusion_matrix.png"
-    )
-
-    plt.savefig(
-        confusion_chart,
-        dpi=150,
-        bbox_inches="tight"
-    )
-
-    plt.close()
-
-
-    # =====================================================
-    # RETURN RESULTS TO FLASK
-    # =====================================================
-
-    return {
-
-        # -------------------------------------------------
-        # Main model accuracy
-        # StandardScaler is used as the main model
-        # -------------------------------------------------
-
-        "train_accuracy": round(
-            standard_train,
-            4
-        ),
-
-        "test_accuracy": round(
-            standard_test,
-            4
-        ),
-
-        # -------------------------------------------------
-        # Dataset sizes
-        # -------------------------------------------------
-
-        "training_records": len(
-            X_train
-        ),
-
-        "testing_records": len(
-            X_test
-        ),
-
-        # -------------------------------------------------
-        # Scaling comparison
-        # -------------------------------------------------
-
-        "scaling_comparison": [
-
-            {
-                "method": "Unscaled",
-
-                "training_accuracy": round(
-                    unscaled_train,
-                    4
-                ),
-
-                "testing_accuracy": round(
-                    unscaled_test,
-                    4
-                )
-            },
-
-            {
-                "method": "StandardScaler",
-
-                "training_accuracy": round(
-                    standard_train,
-                    4
-                ),
-
-                "testing_accuracy": round(
-                    standard_test,
-                    4
-                )
-            },
-
-            {
-                "method": "MinMaxScaler",
-
-                "training_accuracy": round(
-                    minmax_train,
-                    4
-                ),
-
-                "testing_accuracy": round(
-                    minmax_test,
-                    4
+            return {
+                "error":
+                "Missing columns: "
+                + ", ".join(
+                    missing_columns
                 )
             }
 
-        ],
+        # =================================================
+        # CLEAN FEATURES
+        # =================================================
 
-        # -------------------------------------------------
-        # Chart paths
-        # -------------------------------------------------
+        for column in features:
 
-        "scaling_chart":
-            "charts/logistic_scaling_comparison.png",
+            df[column] = pd.to_numeric(
+                df[column],
+                errors="coerce"
+            )
 
-        "confusion_chart":
-            "charts/logistic_confusion_matrix.png"
-    }
+        # =================================================
+        # CLEAN TARGET
+        # =================================================
 
-
-# =========================================================
-# RUN DIRECTLY
-# =========================================================
-
-if __name__ == "__main__":
-
-    result = run_logistic_regression()
-
-    print()
-    print(
-        "=========================================="
-    )
-
-    print(
-        "       LOGISTIC REGRESSION"
-    )
-
-    print(
-        "=========================================="
-    )
-
-    print()
-
-    print(
-        "Train Accuracy:",
-        result["train_accuracy"]
-    )
-
-    print(
-        "Test Accuracy:",
-        result["test_accuracy"]
-    )
-
-    print(
-        "Training Records:",
-        result["training_records"]
-    )
-
-    print(
-        "Testing Records:",
-        result["testing_records"]
-    )
-
-    print()
-
-    print(
-        "Scaling Comparison:"
-    )
-
-    for item in result["scaling_comparison"]:
-
-        print(
-            item["method"],
-            "| Training:",
-            item["training_accuracy"],
-            "| Testing:",
-            item["testing_accuracy"]
+        df[target] = convert_target(
+            df[target]
         )
 
-    print()
+        # =================================================
+        # DROP MISSING
+        # =================================================
 
-    print(
-        "Charts generated successfully."
-    )
+        df = df[
+            features + [target]
+        ].dropna()
 
-    print(
-        "Scaling Chart:",
-        result["scaling_chart"]
-    )
+        if len(df) < 10:
 
-    print(
-        "Confusion Matrix:",
-        result["confusion_chart"]
-    )
+            return {
+                "error":
+                "Not enough valid data."
+            }
 
-    print()
+        # =================================================
+        # TARGET CHECK
+        # =================================================
+
+        if df[target].nunique() != 2:
+
+            return {
+                "error":
+                "PlacementStatus must contain exactly two classes."
+            }
+
+        # =================================================
+        # X / Y
+        # =================================================
+
+        X = df[
+            features
+        ]
+
+        y = df[
+            target
+        ].astype(int)
+
+        # =================================================
+        # TRAIN TEST SPLIT
+        # =================================================
+
+        X_train, X_test, y_train, y_test = train_test_split(
+
+            X,
+            y,
+
+            test_size=0.20,
+
+            random_state=42,
+
+            stratify=y
+
+        )
+
+        # =================================================
+        # STANDARD SCALING
+        # =================================================
+
+        scaler = StandardScaler()
+
+        X_train_scaled = scaler.fit_transform(
+            X_train
+        )
+
+        X_test_scaled = scaler.transform(
+            X_test
+        )
+
+        # =================================================
+        # REGULARIZATION
+        # =================================================
+
+        regularization = (
+            regularization
+            .lower()
+            .strip()
+        )
+
+        if regularization == "none":
+
+            model = LogisticRegression(
+                penalty=None,
+                max_iter=1000
+            )
+
+            model_name = (
+                "Logistic Regression - "
+                "Without Regularization"
+            )
+
+        elif regularization == "l2":
+
+            model = LogisticRegression(
+                penalty="l2",
+                C=1.0,
+                solver="lbfgs",
+                max_iter=1000
+            )
+
+            model_name = (
+                "Logistic Regression - "
+                "L2 Regularization"
+            )
+
+        elif regularization == "l1":
+
+            model = LogisticRegression(
+                penalty="l1",
+                C=1.0,
+                solver="liblinear",
+                max_iter=1000
+            )
+
+            model_name = (
+                "Logistic Regression - "
+                "L1 Regularization"
+            )
+
+        else:
+
+            return {
+                "error":
+                "Invalid regularization option."
+            }
+
+        # =================================================
+        # TRAIN
+        # =================================================
+
+        model.fit(
+            X_train_scaled,
+            y_train
+        )
+
+        # =================================================
+        # PREDICTIONS
+        # =================================================
+
+        train_predictions = model.predict(
+            X_train_scaled
+        )
+
+        test_predictions = model.predict(
+            X_test_scaled
+        )
+
+        # =================================================
+        # METRICS
+        # =================================================
+
+        train_accuracy = accuracy_score(
+            y_train,
+            train_predictions
+        )
+
+        test_accuracy = accuracy_score(
+            y_test,
+            test_predictions
+        )
+
+        precision = precision_score(
+            y_test,
+            test_predictions,
+            zero_division=0
+        )
+
+        recall = recall_score(
+            y_test,
+            test_predictions,
+            zero_division=0
+        )
+
+        f1 = f1_score(
+            y_test,
+            test_predictions,
+            zero_division=0
+        )
+
+        # =================================================
+        # CONFUSION MATRIX
+        # =================================================
+
+        cm = confusion_matrix(
+            y_test,
+            test_predictions
+        )
+
+        # =================================================
+        # CLASSIFICATION REPORT
+        # =================================================
+
+        report = classification_report(
+
+            y_test,
+
+            test_predictions,
+
+            output_dict=True,
+
+            zero_division=0
+
+        )
+
+        # =================================================
+        # CONFUSION MATRIX CHART
+        # =================================================
+
+        chart_name = (
+            f"logistic_"
+            f"{regularization}_"
+            f"confusion_matrix.png"
+        )
+
+        chart_path = os.path.join(
+            CHART_DIR,
+            chart_name
+        )
+
+        plt.figure(
+            figsize=(7, 6)
+        )
+
+        plt.imshow(
+            cm,
+            interpolation="nearest"
+        )
+
+        plt.title(
+            model_name
+        )
+
+        plt.colorbar()
+
+        classes = [
+            "Not Placed",
+            "Placed"
+        ]
+
+        plt.xticks(
+            [0, 1],
+            classes
+        )
+
+        plt.yticks(
+            [0, 1],
+            classes
+        )
+
+        plt.xlabel(
+            "Predicted"
+        )
+
+        plt.ylabel(
+            "Actual"
+        )
+
+        for i in range(
+            cm.shape[0]
+        ):
+
+            for j in range(
+                cm.shape[1]
+            ):
+
+                plt.text(
+
+                    j,
+                    i,
+
+                    str(
+                        cm[i, j]
+                    ),
+
+                    ha="center",
+
+                    va="center"
+
+                )
+
+        plt.tight_layout()
+
+        plt.savefig(
+            chart_path
+        )
+
+        plt.close()
+
+        # =================================================
+        # COEFFICIENTS
+        # =================================================
+
+        coefficients = {}
+
+        for feature, coefficient in zip(
+
+            features,
+
+            model.coef_[0]
+
+        ):
+
+            coefficients[feature] = round(
+
+                float(
+                    coefficient
+                ),
+
+                4
+
+            )
+
+        # =================================================
+        # RETURN
+        # =================================================
+
+        return {
+
+            "success": True,
+
+            "model_name":
+                model_name,
+
+            "regularization":
+                regularization,
+
+            "features":
+                features,
+
+            "samples":
+                len(df),
+
+            "train_samples":
+                len(X_train),
+
+            "test_samples":
+                len(X_test),
+
+            "train_accuracy":
+                round(
+                    float(train_accuracy),
+                    4
+                ),
+
+            "test_accuracy":
+                round(
+                    float(test_accuracy),
+                    4
+                ),
+
+            "precision":
+                round(
+                    float(precision),
+                    4
+                ),
+
+            "recall":
+                round(
+                    float(recall),
+                    4
+                ),
+
+            "f1":
+                round(
+                    float(f1),
+                    4
+                ),
+
+            "confusion_matrix":
+                cm.tolist(),
+
+            "classification_report":
+                report,
+
+            "coefficients":
+                coefficients,
+
+            "confusion_chart":
+                chart_name
+
+        }
+
+    except Exception as e:
+
+        return {
+            "error":
+            str(e)
+        }
