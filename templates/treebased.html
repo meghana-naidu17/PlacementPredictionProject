@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Tree Based Models
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+    <h1>
+        Placement Prediction Dashboard
+    </h1>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <h3>
+            Modules
+        </h3>
+
+
+        <a href="{{ url_for('data_loading') }}">
+
+            Dataset Summary
+
+        </a>
+
+
+        <a href="{{ url_for('eda_page') }}">
+
+            Exploratory Data Analysis
+
+        </a>
+
+
+        <a href="{{ url_for('preprocessing_page') }}">
+
+            Data Preprocessing
+
+        </a>
+
+
+        <a href="{{ url_for('linear_regression_page') }}">
+
+            Linear Regression
+
+        </a>
+
+
+        <a href="{{ url_for('logistic_regression_page') }}">
+
+            Logistic Regression
+
+        </a>
+
+
+        <a href="{{ url_for('tree_based_page') }}"
+           class="active">
+
+            Tree Based Models
+
+        </a>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="content">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="card tree-header">
+
+            <h2>
+                Tree Based Machine Learning
+            </h2>
+
+            <p class="section-description">
+
+                Select a tree-based algorithm to train and
+                evaluate it using the preprocessed placement
+                dataset.
+
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             MODEL SELECTION
+        ================================================== -->
+
+        <div class="card model-selection-card">
+
+            <h2>
+                Select Tree-Based Technique
+            </h2>
+
+
+            <form method="POST"
+                  action="{{ url_for('tree_based_page') }}">
+
+
+                <label for="model">
+
+                    Choose Algorithm:
+
+                </label>
+
+
+                <select id="model"
+                        name="model"
+                        class="model-select"
+                        required>
+
+
+                    <option value=""
+                        {% if not selected_model %}
+                            selected
+                        {% endif %}>
+
+                        -- Select a Technique --
+
+                    </option>
+
+
+                    <option value="decision_tree"
+                        {% if selected_model == "decision_tree" %}
+                            selected
+                        {% endif %}>
+
+                        Decision Tree
+
+                    </option>
+
+
+                    <option value="random_forest"
+                        {% if selected_model == "random_forest" %}
+                            selected
+                        {% endif %}>
+
+                        Random Forest
+
+                    </option>
+
+
+                    <option value="gini"
+                        {% if selected_model == "gini" %}
+                            selected
+                        {% endif %}>
+
+                        Gini Index
+
+                    </option>
+
+
+                    <optgroup label="Boosting Techniques">
+
+
+                        <option value="adaboost"
+                            {% if selected_model == "adaboost" %}
+                                selected
+                            {% endif %}>
+
+                            AdaBoost
+
+                        </option>
+
+
+                        <option value="gradient_boosting"
+                            {% if selected_model == "gradient_boosting" %}
+                                selected
+                            {% endif %}>
+
+                            Gradient Boosting
+
+                        </option>
+
+
+                        <option value="xgboost"
+                            {% if selected_model == "xgboost" %}
+                                selected
+                            {% endif %}>
+
+                            XGBoost
+
+                        </option>
+
+
+                       <option value="lightgbm"
+    {% if selected_model == "lightgbm" %}
+        selected
+    {% endif %}>
+
+    LightGBM
+
+</option>
+
+
+                    </optgroup>
+
+
+                </select>
+
+
+                <button type="submit"
+                        class="run-model-button">
+
+                    Run Algorithm
+
+                </button>
+
+
+            </form>
+
+        </div>
+
+
+        <!-- =================================================
+             ERROR
+        ================================================== -->
+
+        {% if error %}
+
+        <div class="tree-error">
+
+            {{ error }}
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             MODEL RESULT
+        ================================================== -->
+
+        {% if results and not results.error %}
+
+
+        <!-- =================================================
+             GINI RESULT
+        ================================================== -->
+
+        {% if selected_model == "gini" %}
+
+
+        <div class="card">
+
+            <h2>
+                Gini Index Result
+            </h2>
+
+
+            <div class="gini-result">
+
+                <div class="gini-value">
+
+                    {{ results.gini_index }}
+
+                </div>
+
+
+                <p>
+
+                    Gini Index
+
+                </p>
+
+            </div>
+
+
+            <p class="section-description">
+
+                {{ results.description }}
+
+            </p>
+
+
+            <div class="formula-box">
+
+                <strong>
+                    Formula:
+                </strong>
+
+                {{ results.formula }}
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CLASS DISTRIBUTION
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Target Class Distribution
+            </h2>
+
+
+            <table class="tree-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Class
+                        </th>
+
+                        <th>
+                            Count
+                        </th>
+
+                        <th>
+                            Percentage
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for class_name, values
+                       in results.class_distribution.items() %}
+
+                    <tr>
+
+                        <td>
+                            {{ class_name }}
+                        </td>
+
+                        <td>
+                            {{ values.count }}
+                        </td>
+
+                        <td>
+                            {{ values.percentage }}%
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        {% else %}
+
+
+        <!-- =================================================
+             MODEL INFORMATION
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                {{ results.model_name }} Results
+            </h2>
+
+
+            <div class="tree-metrics">
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        Accuracy
+                    </h3>
+
+                    <span>
+                        {{ results.accuracy }}%
+                    </span>
+
+                </div>
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        Precision
+                    </h3>
+
+                    <span>
+                        {{ results.precision }}%
+                    </span>
+
+                </div>
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        Recall
+                    </h3>
+
+                    <span>
+                        {{ results.recall }}%
+                    </span>
+
+                </div>
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        F1 Score
+                    </h3>
+
+                    <span>
+                        {{ results.f1_score }}%
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DATASET INFORMATION
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Dataset Information
+            </h2>
+
+
+            <div class="tree-metrics">
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        Total Rows
+                    </h3>
+
+                    <span>
+                        {{ results.total_rows }}
+                    </span>
+
+                </div>
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        Total Columns
+                    </h3>
+
+                    <span>
+                        {{ results.total_columns }}
+                    </span>
+
+                </div>
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        Training Rows
+                    </h3>
+
+                    <span>
+                        {{ results.training_rows }}
+                    </span>
+
+                </div>
+
+
+                <div class="tree-metric-box">
+
+                    <h3>
+                        Testing Rows
+                    </h3>
+
+                    <span>
+                        {{ results.testing_rows }}
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CONFUSION MATRIX
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Confusion Matrix
+            </h2>
+
+
+            <div class="confusion-wrapper">
+
+                <table class="confusion-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Actual / Predicted
+                            </th>
+
+                            <th>
+                                0
+                            </th>
+
+                            <th>
+                                1
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        <tr>
+
+                            <th>
+                                0
+                            </th>
+
+                            <td class="tn">
+
+                                {{ results.tn }}
+
+                                <small>
+                                    TN
+                                </small>
+
+                            </td>
+
+                            <td class="fp">
+
+                                {{ results.fp }}
+
+                                <small>
+                                    FP
+                                </small>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <th>
+                                1
+                            </th>
+
+                            <td class="fn">
+
+                                {{ results.fn }}
+
+                                <small>
+                                    FN
+                                </small>
+
+                            </td>
+
+                            <td class="tp">
+
+                                {{ results.tp }}
+
+                                <small>
+                                    TP
+                                </small>
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CLASSIFICATION REPORT
+        ================================================== -->
+
+        <div class="card">
+
+            <h2>
+                Classification Report
+            </h2>
+
+
+            <div class="tree-table-wrapper">
+
+                <table class="tree-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Class
+                            </th>
+
+                            <th>
+                                Precision
+                            </th>
+
+                            <th>
+                                Recall
+                            </th>
+
+                            <th>
+                                F1 Score
+                            </th>
+
+                            <th>
+                                Support
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        <tr>
+
+                            <td>
+                                Class 0
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(
+                                    results.classification_report["0"]["precision"] * 100
+                                ) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(
+                                    results.classification_report["0"]["recall"] * 100
+                                ) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(
+                                    results.classification_report["0"]["f1-score"] * 100
+                                ) }}%
+                            </td>
+
+                            <td>
+                                {{ results.classification_report["0"]["support"] }}
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                Class 1
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(
+                                    results.classification_report["1"]["precision"] * 100
+                                ) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(
+                                    results.classification_report["1"]["recall"] * 100
+                                ) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(
+                                    results.classification_report["1"]["f1-score"] * 100
+                                ) }}%
+                            </td>
+
+                            <td>
+                                {{ results.classification_report["1"]["support"] }}
+                            </td>
+
+                        </tr>
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        {% endif %}
+
+        {% endif %}
+<!-- =====================================================
+     MODEL CHARTS
+====================================================== -->
+
+<div class="card">
+
+    <h2>
+        Model Visualization
+    </h2>
+
+    <!-- ================================================
+         DECISION TREE STRUCTURE
+    ================================================= -->
+
+    {% if results.decision_tree_chart %}
+
+    <div class="chart-section">
+
+        <h3>
+            Decision Tree Structure
+        </h3>
+
+        <p class="section-description">
+
+            Visualization of the decision tree used by the
+            classifier to make placement predictions.
+
+        </p>
+
+        <div class="chart-container">
+
+            <img
+                src="{{ results.decision_tree_chart }}"
+                alt="Decision Tree Structure"
+                class="tree-chart"
+            >
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ================================================
+         FEATURE IMPORTANCE
+    ================================================= -->
+
+    {% if results.feature_importance_chart %}
+
+    <div class="chart-section">
+
+        <h3>
+            Feature Importance
+        </h3>
+
+        <p class="section-description">
+
+            Shows the most important features used by
+            {{ results.model_name }} for prediction.
+
+        </p>
+
+        <div class="chart-container">
+
+            <img
+                src="{{ results.feature_importance_chart }}"
+                alt="Feature Importance"
+                class="tree-chart"
+            >
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ================================================
+         CONFUSION MATRIX
+    ================================================= -->
+
+    {% if results.confusion_chart %}
+
+    <div class="chart-section">
+
+        <h3>
+            Confusion Matrix Visualization
+        </h3>
+
+        <div class="chart-container">
+
+            <img
+                src="{{ results.confusion_chart }}"
+                alt="Confusion Matrix"
+                class="tree-chart small-chart"
+            >
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ================================================
+         ACTUAL VS PREDICTED
+    ================================================= -->
+
+    {% if results.prediction_chart %}
+
+    <div class="chart-section">
+
+        <h3>
+            Actual vs Predicted
+        </h3>
+
+        <p class="section-description">
+
+            Comparison of the actual placement classes with
+            the classes predicted by the model.
+
+        </p>
+
+        <div class="chart-container">
+
+            <img
+                src="{{ results.prediction_chart }}"
+                alt="Actual vs Predicted"
+                class="tree-chart small-chart"
+            >
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+    </main>
+
+</div>
+
+
+</body>
+
+</html>
