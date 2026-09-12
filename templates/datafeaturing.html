@@ -39,52 +39,51 @@
     <!-- =====================================================
          SIDEBAR
     ====================================================== -->
+    
+        <aside class="sidebar">
 
-    <aside class="sidebar">
+    <h3>
+        Modules
+    </h3>
 
-        <h3>
-            Modules
-        </h3>
+    <a href="{{ url_for('data_loading') }}"
+       class="{% if active == 'data-loading' %}active{% endif %}">
+        Dataset Summary
+    </a>
 
+    <a href="{{ url_for('eda_page') }}"
+       class="{% if active == 'eda' %}active{% endif %}">
+        Exploratory Data Analysis
+    </a>
 
-        <a href="{{ url_for('data_loading') }}">
+    <a href="{{ url_for('preprocessing_page') }}"
+       class="{% if active == 'preprocessing' %}active{% endif %}">
+        Data Preprocessing
+    </a>
 
-            Dataset Summary
+    <a href="{{ url_for('linear_regression_page') }}"
+       class="{% if active == 'linear-regression' %}active{% endif %}">
+        Linear Regression
+    </a>
 
-        </a>
+    <a href="{{ url_for('logistic_regression_page') }}"
+       class="{% if active == 'logistic-regression' %}active{% endif %}">
+        Logistic Regression
+    </a>
 
+    <a href="{{ url_for('tree_based_page') }}"
+       class="{% if active == 'tree-based' %}active{% endif %}">
+        Tree Based Models
+    </a>
+<a
+    href="{{ url_for('kmeans_page') }}"
+    class="{% if active == 'kmeans' %}active{% endif %}"
+>
 
-        <a href="{{ url_for('eda_page') }}">
+     K-Means Clustering
 
-            Exploratory Data Analysis
-
-        </a>
-
-
-        <a href="{{ url_for('preprocessing_page') }}"
-           class="active">
-
-            Data Preprocessing
-
-        </a>
-
-
-        <a href="{{ url_for('linear_regression_page') }}">
-
-            Linear Regression
-
-        </a>
-
-
-        <a href="{{ url_for('logistic_regression_page') }}">
-
-            Logistic Regression
-
-        </a>
-         <a href="{{ url_for('tree_based_page') }}"
-           class="active">
-
-            Tree Based Models
+</a>
+</aside>
 
         </a>
 

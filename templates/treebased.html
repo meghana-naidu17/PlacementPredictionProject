@@ -78,6 +78,14 @@
             Logistic Regression
 
         </a>
+        <a
+    href="{{ url_for('kmeans_page') }}"
+    class="{% if active == 'kmeans' %}active{% endif %}"
+>
+
+     K-Means Clustering
+
+</a>
 
 
         <a href="{{ url_for('tree_based_page') }}"
