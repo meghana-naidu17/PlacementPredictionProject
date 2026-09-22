@@ -17,6 +17,8 @@ from logistic_regression import run_logistic_regression
 from treebased import run_tree_based
 
 from kmeans import run_kmeans
+from hierarchical_clustering import run_hierarchical
+from dbscan import run_dbscan
 
 
 app = Flask(__name__)
@@ -560,6 +562,70 @@ def kmeans_page():
         results=results,
         selected_method=selected_method,
         selected_k=selected_k,
+        error=error
+    )
+
+
+# =========================================================
+# HIERARCHICAL CLUSTERING
+# =========================================================
+
+@app.route("/hierarchical-clustering", methods=["GET", "POST"])
+def hierarchical_clustering_page():
+    results = None
+    error = None
+    selected_clusters = 3
+    selected_linkage = "ward"
+
+    if request.method == "POST":
+        try:
+            selected_clusters = int(request.form.get("n_clusters", 3))
+            selected_linkage = request.form.get("linkage", "ward")
+            results = run_hierarchical(selected_clusters, selected_linkage)
+            if results.get("error"):
+                error = results["error"]
+                results = None
+        except Exception as e:
+            error = f"{type(e).__name__}: {str(e)}"
+
+    return render_template(
+        "hierarchical_clustering.html",
+        active="hierarchical-clustering",
+        results=results,
+        selected_clusters=selected_clusters,
+        selected_linkage=selected_linkage,
+        error=error
+    )
+
+
+# =========================================================
+# DBSCAN
+# =========================================================
+
+@app.route("/dbscan", methods=["GET", "POST"])
+def dbscan_page():
+    results = None
+    error = None
+    selected_eps = 1.2
+    selected_min_samples = 5
+
+    if request.method == "POST":
+        try:
+            selected_eps = float(request.form.get("eps", 1.2))
+            selected_min_samples = int(request.form.get("min_samples", 5))
+            results = run_dbscan(selected_eps, selected_min_samples)
+            if results.get("error"):
+                error = results["error"]
+                results = None
+        except Exception as e:
+            error = f"{type(e).__name__}: {str(e)}"
+
+    return render_template(
+        "dbscan.html",
+        active="dbscan",
+        results=results,
+        selected_eps=selected_eps,
+        selected_min_samples=selected_min_samples,
         error=error
     )
 

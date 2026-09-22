@@ -157,6 +157,16 @@
 
 </a>
 
+<a href="{{ url_for('hierarchical_clustering_page') }}"
+   class="{% if active == 'hierarchical-clustering' %}active{% endif %}">
+    🌳 Hierarchical Clustering
+</a>
+
+<a href="{{ url_for('dbscan_page') }}"
+   class="{% if active == 'dbscan' %}active{% endif %}">
+    🔎 DBSCAN Clustering
+</a>
+
     </aside>
 
 
